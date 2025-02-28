@@ -26,6 +26,7 @@ export default function Home() {
           <button className="btn btn-dark me-3" onClick={() => setSidebarOpen(!isSidebarOpen)}>
             ☰
           </button>
+          <img src="public/nlogo.png" width="800" />
           <h2 className="fw-bold mb-0">LiveChatAI</h2>
           <button className="btn btn-dark ms-auto">Get Started</button>
         </nav>
