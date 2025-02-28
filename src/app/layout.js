@@ -1,5 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Roboto_Slab } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -11,6 +11,14 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+const robotoSlab = Roboto_Slab({
+  subsets: ["latin"],
+  variable: "--font-roboto-slab",
+  weight: ["100", "400", "700"], 
+  display: "swap",
+});
+
 
 export const metadata = {
   title: "LiveChatAI - AI Chatbot",
@@ -29,7 +37,7 @@ export default function RootLayout({ children }) {
             <h2 className="fw-bold">LiveChatAI</h2>
             <button className="btn btn-dark">Get Started</button>
           </nav>
-
+          
           {/* Main Content */}
           <div className="row align-items-center">
             <div className="col-md-6 text-md-start text-center">

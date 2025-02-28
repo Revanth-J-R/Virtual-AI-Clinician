@@ -2,6 +2,7 @@
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 
 export default function Home() {
@@ -22,15 +23,28 @@ export default function Home() {
       {/* Main Layout */}
       <div className={`main-content ${isSidebarOpen ? "shifted" : ""}`}>
         {/* Navbar (Fixed at Top) */}
-        <nav className="navbar navbar-expand-lg navbar-light bg-light px-3 fixed-top">
-          <button className="btn btn-dark me-3" onClick={() => setSidebarOpen(!isSidebarOpen)}>
+        <nav className="navbar navbar-expand-lg navbar-light bg-light px-3 fixed-top d-flex align-items-center">
+          {/* Sidebar Toggle Button */}
+          <button className="btn btn-outline-dark me-3" onClick={() => setSidebarOpen(!isSidebarOpen)}>
             ☰
           </button>
-          <img src="public/nlogo.png" width="800" />
-          <h2 className="fw-bold mb-0">LiveChatAI</h2>
-          <button className="btn btn-dark ms-auto">Get Started</button>
-        </nav>
 
+          {/* Logo & Title */}
+          <div className="d-flex align-items-center">
+            <img src="/nlogo.png" className="Logo" alt="LiveChatAI Logo" />
+            <h2 className="Top">LiveChatAI</h2>
+          </div>
+
+          {/* Spacer to push buttons to the right */}
+            <div className="ms-auto">
+          <Link href="/Authpages/SignIn">
+            <button className="btn btn-dark me-2">Sign Up</button>
+          </Link>
+          <Link href="/Authpages/LogIn">
+            <button className="btn btn-dark">Login</button>
+          </Link>
+      </div>
+        </nav>
         {/* Main Content */}
         <div className="container text-center py-5 mt-5">
           <div className="row align-items-center">
@@ -39,7 +53,7 @@ export default function Home() {
               <p className="text-muted">
                 First Aid. Save time for your team and customers with AI-powered answers.
               </p>
-              <button className="btn btn-primary px-4">Get Started</button>
+              <button className="get-started-btn">Get Started</button>
             </div>
             <div className="col-md-6 d-flex justify-content-center">
               <div className="border rounded p-3 shadow" style={{ width: "300px" }}>

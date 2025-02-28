@@ -1,4 +1,7 @@
-/* Sidebar */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .sidebar {
   width: 250px;
   height: 100vh;
@@ -36,4 +39,43 @@
 /* Ensuring content doesn't go under navbar */
 .container {
   margin-top: 80px;
+}
+.Top {
+  font-weight: 10;
+  font-family: Verdana;
+  font-weight: 700;
+  color: blue;
+}
+
+
+
+.Logo{
+  height: 50px;
+  width: 60px;
+}
+.get-started-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px; 
+  background-color: black;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.get-started-btn img {
+  width: 20px;
+  height: 20px;
+}
+
+.get-started-btn:hover {
+  background-color: #222;
+  transform: scale(1.05);
+  box-shadow: 0px 6px 14px rgba(0, 0, 0, 0.3);
 }
