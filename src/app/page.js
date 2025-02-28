@@ -67,10 +67,10 @@ export default function Home() {
                 understands, responds, and supports you with the warmth and
                 intelligence of human touch.
               </p>
-              <button className="get-started-btn flex items-center gap-2 bg-black text-white px-6 py-3 rounded-full hover:scale-105 transition-transform">
+              <Link href="/your-target-page" className="get-started-btn">
                 Get Started
                 <span className="text-lg">→</span>
-              </button>
+              </Link>
             </div>
 
             {/* Right Side - Image */}
