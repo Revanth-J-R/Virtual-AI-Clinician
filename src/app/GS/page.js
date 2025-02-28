@@ -1,82 +1,76 @@
 "use client";
 
 import "bootstrap/dist/css/bootstrap.min.css";
-import Image from "next/image";
 import { useState } from "react";
+import "./gs.css"; // Import the updated CSS
 
 export default function ChatbotPage() {
   const [messages, setMessages] = useState([
-    { sender: "bot", text: "Hello! I'm Alpha, your AI assistant. How can I help you today?" },
+    { sender: "bot", text: "Hello! I'm Alpha, your AI assistant. How can I help?" },
   ]);
   const [input, setInput] = useState("");
+  const [faqOpen, setFaqOpen] = useState(false);
 
   const handleSend = () => {
     if (!input.trim()) return;
-    // Append user message
+
     setMessages([...messages, { sender: "user", text: input }]);
     setInput("");
 
-    // Simulate a bot response after a short delay
     setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { sender: "bot", text: "I'm here to help!" },
-      ]);
+      setMessages((prev) => [...prev, { sender: "bot", text: "I'm here to help!" }]);
     }, 1000);
   };
 
   return (
-    <div className="container-fluid p-0" style={{ background: "#f8f9fa", minHeight: "100vh" }}>
-      {/* Top AI Avatar Section */}
-      <div className="d-flex justify-content-center align-items-center py-4" style={{ background: "#343a40" }}>
-        <div className="position-relative">
-          <Image 
-            src="/ai-avatar.png" 
-            alt="AI Avatar" 
-            width={120} 
-            height={120} 
-            className="rounded-circle border border-3 border-white" 
+    <div className="chat-container">
+      {/* AI Avatar */}
+      <div className="ai-avatar">
+        <img src="/ai-avatar.png" alt="AI Avatar" className="avatar-image" />
+      </div>
+
+      {/* Chat Box */}
+      <div className="chat-box">
+        <div className="messages">
+          {messages.map((msg, index) => (
+            <div key={index} className={`message ${msg.sender}`}>
+              {msg.text}
+            </div>
+          ))}
+        </div>
+
+        {/* Input Area */}
+        <div className="input-area">
+          <input
+            type="text"
+            className="chat-input"
+            placeholder="Type your message..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && handleSend()}
           />
-          <div 
-            className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success"
-            style={{ fontSize: "0.8rem" }}
-          >
-            AI
-          </div>
+          <button className="send-btn" onClick={handleSend}>
+            Send
+          </button>
         </div>
       </div>
 
-      {/* Chat Interface */}
-      <div className="container py-4">
-        <div className="card shadow-lg" style={{ maxWidth: "600px", margin: "0 auto" }}>
-          <div className="card-body" style={{ height: "400px", overflowY: "auto" }}>
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`mb-3 d-flex ${msg.sender === "bot" ? "justify-content-start" : "justify-content-end"}`}
-              >
-                <span className={`badge ${msg.sender === "bot" ? "bg-primary" : "bg-secondary"}`} style={{ fontSize: "1rem", padding: "10px", borderRadius: "15px" }}>
-                  {msg.text}
-                </span>
-              </div>
-            ))}
+      {/* FAQ Section (Right Side) */}
+      <div className={`faq-section ${faqOpen ? "open" : ""}`}>
+        <button className="faq-toggle" onClick={() => setFaqOpen(!faqOpen)}>
+          {faqOpen ? "❌ Close FAQ" : "❓ FAQ"}
+        </button>
+
+        {faqOpen && (
+          <div className="faq-content">
+            <h3>Frequently Asked Questions</h3>
+            <ul>
+              <li><strong>How does this chatbot work?</strong> <br /> It uses AI to provide real-time responses.</li>
+              <li><strong>Can I talk about medical issues?</strong> <br /> Yes, but always consult a doctor for serious concerns.</li>
+              <li><strong>Is my data safe?</strong> <br /> Yes, we do not store personal data.</li>
+            </ul>
           </div>
-          <div className="card-footer">
-            <div className="input-group">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Type your message..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => { if (e.key === "Enter") handleSend(); }}
-              />
-              <button className="btn btn-dark" onClick={handleSend}>
-                Send
-              </button>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

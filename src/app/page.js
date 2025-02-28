@@ -1,6 +1,7 @@
 "use client";
 
 import "bootstrap/dist/css/bootstrap.min.css";
+import Image from "next/image"; // Using Next.js Image component for optimization
 import Link from "next/link";
 import { useState } from "react";
 
@@ -11,16 +12,46 @@ export default function Home() {
     <div className="d-flex">
       {/* Sidebar */}
       <div className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
-        <h4 className="px-3 py-3">Menu</h4>
+        <h4 className="sidebar-title">Menu</h4>
         <ul className="sidebar-menu">
           <li>
             <Link href="/dashboard" aria-label="Go to Dashboard">
-              Dashboard
+              <span className="menu-icon">📊</span> Dashboard
             </Link>
           </li>
           <li>
             <Link href="/settings" aria-label="Go to Settings">
-              Settings
+              <span className="menu-icon">⚙️</span> Settings
+            </Link>
+          </li>
+          <li>
+            <Link href="/ai-doctor" aria-label="Go to AI Doctor">
+              <span className="menu-icon">🩺</span> AI Doctor
+            </Link>
+          </li>
+          <li>
+            <Link href="/myhealth-tracker" aria-label="Go to MyHealth Tracker">
+              <span className="menu-icon">📊</span> MyHealth Tracker
+            </Link>
+          </li>
+          <li>
+            <Link href="/special-care" aria-label="Go to Special Care Hub">
+              <span className="menu-icon">❤️</span> Special Care Hub
+            </Link>
+          </li>
+          <li>
+            <Link href="/xray-analyzer" aria-label="Go to AI X-Ray Analyzer">
+              <span className="menu-icon">🔍</span> AI X-Ray Analyzer
+            </Link>
+          </li>
+          <li>
+            <Link href="/disease-prevention" aria-label="Go to Disease Prevention">
+              <span className="menu-icon">🛡️</span> Disease Prevention
+            </Link>
+          </li>
+          <li>
+            <Link href="/disease-prevention" aria-label="Go to Disease Prevention">
+              <span className="menu-icon">🙍🏻‍♂️</span> Profile
             </Link>
           </li>
         </ul>
@@ -67,22 +98,39 @@ export default function Home() {
                 understands, responds, and supports you with the warmth and
                 intelligence of human touch.
               </p>
-              <Link href="/your-target-page" className="get-started-btn">
+              <Link href="/GS" className="get-started-btn">
                 Get Started
                 <span className="text-lg">→</span>
               </Link>
             </div>
 
-            {/* Right Side - Image */}
+            {/* Right Side - New Section */}
             <div className="col-md-6">
-              <img
-                src="/chat-image.png"
-                alt="LiveChatAI Preview"
-                width={1200}
-                height={900}
-                className="img-fluid rounded"
-              />
+              <div className="container d-flex justify-content-center py-5 mt-5">
+                <div className="card shadow-lg p-4 d-flex flex-row align-items-center" style={{ maxWidth: "800px", borderRadius: "15px" }}>
+                  {/* Left Side - Text */}
+                  <div className="flex-grow-1 text-start px-4">
+                    <h1 className="fw-bold">Welcome to AlphaWell</h1>
+                    <p className="text-muted">
+                      Just ask—LiveChatAI is here to guide, assist, and support your health anytime.
+                    </p>
+                    <button className="btn btn-dark rounded-pill px-4 py-2 mt-2">Read the Docs  →</button>
+                  </div>
+
+                  {/* Right Side - Image */}
+                  <div>
+                    <Image 
+                      src="/chat-image.png" 
+                      alt="LiveChatAI Preview" 
+                      width={700} 
+                      height={700} 
+                      className="img-fluid rounded"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
+            {/* End of Right Side */}
           </div>
         </div>
       </div>
