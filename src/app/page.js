@@ -19,10 +19,10 @@ export default function Home() {
         </ul>
       </div>
 
-      {/* Main Container */}
-      <div className={`container-fluid content ${isSidebarOpen ? "shifted" : ""}`}>
-        {/* Navbar */}
-        <nav className="navbar navbar-expand-lg navbar-light bg-light px-3">
+      {/* Main Layout */}
+      <div className={`main-content ${isSidebarOpen ? "shifted" : ""}`}>
+        {/* Navbar (Fixed at Top) */}
+        <nav className="navbar navbar-expand-lg navbar-light bg-light px-3 fixed-top">
           <button className="btn btn-dark me-3" onClick={() => setSidebarOpen(!isSidebarOpen)}>
             ☰
           </button>
@@ -31,7 +31,7 @@ export default function Home() {
         </nav>
 
         {/* Main Content */}
-        <div className="container text-center py-5">
+        <div className="container text-center py-5 mt-5">
           <div className="row align-items-center">
             <div className="col-md-6 text-md-start text-center">
               <h1 className="fw-bold">AI Chatbot for Customer Support.</h1>

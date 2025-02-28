@@ -1,4 +1,4 @@
-/* Sidebar Styles */
+/* Sidebar */
 .sidebar {
   width: 250px;
   height: 100vh;
@@ -15,11 +15,25 @@
   left: 0;
 }
 
-/* Content shift when sidebar opens */
-.content {
+/* Main Content */
+.main-content {
+  width: 100%;
   transition: margin-left 0.3s ease;
+  padding-top: 60px; /* To prevent content from overlapping navbar */
 }
 
-.content.shifted {
+.main-content.shifted {
   margin-left: 250px;
+}
+
+/* Navbar */
+.navbar.fixed-top {
+  width: 100%;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensuring content doesn't go under navbar */
+.container {
+  margin-top: 80px;
 }
