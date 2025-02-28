@@ -15,7 +15,7 @@ export default function Home() {
         <div className="col-md-6 text-md-start text-center">
           <h1 className="fw-bold">AI Chatbot for Customer Support.</h1>
           <p className="text-muted">
-            Resolve 70% of customer support queries instantly. Save time for your team and customers with AI-powered answers.
+            First Aid. Save time for your team and customers with AI-powered answers.
           </p>
           <button className="btn btn-primary px-4">Get Started</button>
         </div>
