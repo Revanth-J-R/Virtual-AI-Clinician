@@ -1,3 +1,5 @@
+"use client";
+
 import "bootstrap/dist/css/bootstrap.min.css";
 import Image from "next/image";
 import { useState } from "react";
@@ -8,16 +10,17 @@ export default function Home() {
   return (
     <div className="d-flex">
       {/* Sidebar */}
-      <div className={`bg-dark text-white p-3 sidebar ${isSidebarOpen ? "open" : ""}`}>
-        <h4>Menu</h4>
-        <ul className="list-unstyled">
-          <li className="py-2"><a href="#" className="text-white">Dashboard</a></li>
-          <li className="py-2"><a href="#" className="text-white">Chatbot</a></li>
-          <li className="py-2"><a href="#" className="text-white">Settings</a></li>
+      <div className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
+        <h4 className="px-3 py-3">Menu</h4>
+        <ul className="list-unstyled px-3">
+          <li className="py-2"><a href="#" className="text-white text-decoration-none">Dashboard</a></li>
+          <li className="py-2"><a href="#" className="text-white text-decoration-none">Chatbot</a></li>
+          <li className="py-2"><a href="#" className="text-white text-decoration-none">Settings</a></li>
         </ul>
       </div>
 
-      <div className="container-fluid">
+      {/* Main Container */}
+      <div className={`container-fluid content ${isSidebarOpen ? "shifted" : ""}`}>
         {/* Navbar */}
         <nav className="navbar navbar-expand-lg navbar-light bg-light px-3">
           <button className="btn btn-dark me-3" onClick={() => setSidebarOpen(!isSidebarOpen)}>
@@ -52,21 +55,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
-      {/* Sidebar Styles */}
-      <style jsx>{`
-        .sidebar {
-          width: 250px;
-          height: 100vh;
-          position: fixed;
-          top: 0;
-          left: -250px;
-          transition: left 0.3s ease;
-        }
-        .sidebar.open {
-          left: 0;
-        }
-      `}</style>
     </div>
   );
 }
