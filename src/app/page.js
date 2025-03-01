@@ -45,7 +45,7 @@ export default function Home() {
             </Link>
           </li>
           <li>
-            <Link href="/disease-prevention" aria-label="Go to Disease Prevention">
+            <Link href="/Sidebarpages/article" aria-label="Go to Disease Prevention">
               <span className="menu-icon">🛡️</span> Disease Prevention
             </Link>
           </li>
