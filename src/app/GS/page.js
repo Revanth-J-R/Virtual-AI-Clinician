@@ -13,8 +13,6 @@ export default function ChatbotPage() {
   ]);
   const [input, setInput] = useState("");
   const [faqOpen, setFaqOpen] = useState(false);
-
-  // Sidebar state
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   const handleSend = () => {
@@ -70,7 +68,7 @@ export default function ChatbotPage() {
             </Link>
           </li>
           <li>
-            <Link href="C:\Users\PRASENNA\HealthcareHack\src\app\Sidebarpages\profile" aria-label="Go to Profile">
+            <Link href="/Sidebarpages/profile" aria-label="Go to Profile">
               Profile
             </Link>
           </li>
@@ -90,8 +88,8 @@ export default function ChatbotPage() {
         </div>
         <div className="profile-icon">
           <Link href="/profile">
-            <Image
-              src="/profile.png"
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/6522/6522516.png"
               alt="Profile"
               width={40}
               height={40}

@@ -1,9 +1,9 @@
 "use client";
 
-import { auth } from "@/app/firebaseConfig"; // Adjust the path as needed
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { auth } from "./firebaseConfig"; // Adjust the path as needed
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
