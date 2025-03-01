@@ -1,36 +1,36 @@
+from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 from PIL import Image
 import torch
-import streamlit as st
+import io
 
-# Load the model and processor from the local "results" directory
-model_dir = "./results"  # Local model directory
+app = FastAPI()
 
-processor = AutoImageProcessor.from_pretrained(model_dir)
-model = AutoModelForImageClassification.from_pretrained(model_dir)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Load Model
+MODEL_PATH = "results"
+processor = AutoImageProcessor.from_pretrained(MODEL_PATH)
+model = AutoModelForImageClassification.from_pretrained(MODEL_PATH)
 
 def classify_image(image):
-    """Classify an image using the locally saved model."""
-    image = Image.open(image).convert("RGB")
-    
-    # Preprocess image
+    """Classify an uploaded image using the Hugging Face model."""
     inputs = processor(images=image, return_tensors="pt")
-    
-    # Perform inference
     with torch.no_grad():
         outputs = model(**inputs)
-    
-    # Get predictions
-    logits = outputs.logits
-    predicted_class = logits.argmax(-1).item()
-    
+    predicted_class = outputs.logits.argmax(-1).item()
     return predicted_class
 
-# Streamlit UI
-st.title("Image Classification App")
-uploaded_file = st.file_uploader("Upload an Image", type=["jpg", "jpeg", "png"])
-
-if uploaded_file is not None:
-    st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
-    result = classify_image(uploaded_file)
-    st.write(f"Predicted class: {result}")
+@app.post("/predict/")
+async def predict(file: UploadFile = File(...)):
+    """Receive image, classify, and return prediction."""
+    image = Image.open(io.BytesIO(await file.read())).convert("RGB")
+    predicted_class = classify_image(image)
+    return {"predicted_class": predicted_class}
