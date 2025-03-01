@@ -1,0 +1,157 @@
+/* Full Page Styling */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #ffffff;
+  height: 800px;
+  height: 100vh;
+  padding-top: 20px;
+}
+
+/* AI Avatar Section */
+.ai-avatar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.avatar-image {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #000;
+  display: block;
+}
+
+/* Chat Box */
+.chat-box {
+  width: 90%;
+  max-width: 500px;
+  background: rgb(255, 255, 255);
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  height: 300px;
+  overflow: hidden;
+}
+
+/* Chat Messages */
+.messages {
+  flex-grow: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Chat Bubbles */
+.message {
+  max-width: 75%;
+  padding: 12px 15px;
+  border-radius: 10px;
+  font-size: 1rem;
+  word-wrap: break-word;
+}
+
+/* Bot Messages */
+.message.bot {
+  background: #e3f2fd;
+  align-self: flex-start;
+  color: #000;
+}
+
+/* User Messages */
+.message.user {
+  background: #d1e7dd;
+  align-self: flex-end;
+  color: #000;
+}
+
+/* Input Area */
+.input-area {
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid #ccc;
+  background: white;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline: none;
+  font-size: 1rem;
+}
+
+.send-btn {
+  background: #000000;
+  color: white;
+  border: none;
+  padding: 12px 16px;
+  margin-left: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.send-btn:hover {
+  background: #464646;
+}
+
+/* FAQ Section - Now on Right Side */
+.faq-section {
+  position: fixed;
+  bottom: 20px; /* Lower on the screen */
+  right: 20px; /* Moves it to the right */
+  width: 220px; /* Keeps it small */
+  background: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+.faq-section.open {
+  width: 240px;
+}
+
+.faq-toggle {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  width: 100%;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.faq-toggle:hover {
+  background: #0056b3;
+}
+
+.faq-content {
+  margin-top: 10px;
+  font-size: 0.8rem;
+}
+
+.faq-content h3 {
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.faq-content ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.faq-content li {
+  margin-bottom: 6px;
+}

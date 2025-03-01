@@ -1,0 +1,106 @@
+/* 
+  Unique class names prefixed with 'cb-' to prevent collisions 
+  with any global/Tailwind styles 
+*/
+
+/* Container with a light gradient background */
+.cb-container {
+  max-width: 400px;
+  margin: 40px auto;
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+
+  /* Stack elements vertically */
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Title */
+.cb-title {
+  text-align: center;
+  color: #333;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 0;
+}
+
+/* Chat box for messages */
+.cb-box {
+  width: 100%;
+  height: 300px;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 10px;
+
+  /* Stack messages top-to-bottom */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Base message style */
+.cb-message {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 5px;
+  max-width: 70%;
+  word-wrap: break-word;
+}
+
+/* User message on the right */
+.cb-message-user {
+  background: #4caf50;
+  color: #fff;
+  align-self: flex-end;
+}
+
+/* Bot message on the left */
+.cb-message-bot {
+  background: #007bff;
+  color: #fff;
+  align-self: flex-start;
+}
+
+/* Input row using CSS Grid: text input + file + send button in one row */
+.cb-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto; /* 3 columns */
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+/* Text field */
+.cb-input-field {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+/* File upload input */
+.cb-file-upload {
+  font-size: 14px;
+  color: #333;
+}
+
+/* Send button */
+.cb-send-btn {
+  padding: 10px 15px;
+  background: #ffcc00;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #333;
+  transition: 0.3s ease-in-out;
+}
+
+.cb-send-btn:hover {
+  background: #ffdb4d;
+}
