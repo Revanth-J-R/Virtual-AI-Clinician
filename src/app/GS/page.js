@@ -7,11 +7,15 @@ import { useState } from "react";
 import "./gs.css"; // Import your custom CSS
 
 export default function ChatbotPage() {
+  // Chat state
   const [messages, setMessages] = useState([
     { sender: "bot", text: "Hello! I'm Alpha, your AI assistant. How can I help?" },
   ]);
   const [input, setInput] = useState("");
   const [faqOpen, setFaqOpen] = useState(false);
+
+  // Sidebar state
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -26,9 +30,64 @@ export default function ChatbotPage() {
 
   return (
     <div className="chat-container">
+      {/* Sidebar */}
+      <div className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
+        <h4 className="sidebar-title">Menu</h4>
+        <ul className="sidebar-menu">
+          <li>
+            <Link href="/dashboard" aria-label="Go to Dashboard">
+              Dashboard
+            </Link>
+          </li>
+          <li>
+            <Link href="/settings" aria-label="Go to Settings">
+              Settings
+            </Link>
+          </li>
+          <li>
+            <Link href="/ai-doctor" aria-label="Go to AI Doctor">
+              AI Doctor
+            </Link>
+          </li>
+          <li>
+            <Link href="/myhealth-tracker" aria-label="Go to MyHealth Tracker">
+              MyHealth Tracker
+            </Link>
+          </li>
+          <li>
+            <Link href="/special-care" aria-label="Go to Special Care Hub">
+              Special Care Hub
+            </Link>
+          </li>
+          <li>
+            <Link href="/Sidebarpages/xray">
+              AI X-Ray Analyzer
+            </Link>
+          </li>
+          <li>
+            <Link href="/Sidebarpages/article" aria-label="Go to Disease Prevention">
+              Disease Prevention
+            </Link>
+          </li>
+          <li>
+            <Link href="C:\Users\PRASENNA\HealthcareHack\src\app\Sidebarpages\profile" aria-label="Go to Profile">
+              Profile
+            </Link>
+          </li>
+        </ul>
+      </div>
+
       {/* Navbar */}
       <nav className="navbar navbar-light bg-light fixed-top d-flex justify-content-between align-items-center px-3">
-        <div className="navbar-brand">AlphaWell</div>
+        <div className="d-flex align-items-center">
+          <button
+            className="btn bg-black text-white me-2"
+            onClick={() => setSidebarOpen(!isSidebarOpen)}
+          >
+            ☰
+          </button>
+          <div className="navbar-brand">AlphaWell</div>
+        </div>
         <div className="profile-icon">
           <Link href="/profile">
             <Image
@@ -42,7 +101,7 @@ export default function ChatbotPage() {
         </div>
       </nav>
 
-      {/* Main content wrapper with top margin to account for navbar */}
+      {/* Main Content Wrapper with top margin to account for navbar */}
       <div style={{ marginTop: "80px" }}>
         {/* AI Avatar Section */}
         <div className="ai-avatar">
@@ -86,7 +145,6 @@ export default function ChatbotPage() {
           <button className="faq-toggle" onClick={() => setFaqOpen(!faqOpen)}>
             {faqOpen ? "❌ Close FAQ" : "❓ FAQ"}
           </button>
-
           {faqOpen && (
             <div className="faq-content">
               <h3>Frequently Asked Questions</h3>

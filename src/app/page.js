@@ -1,12 +1,33 @@
 "use client";
 
 import "bootstrap/dist/css/bootstrap.min.css";
-import Image from "next/image"; // Using Next.js Image component for optimization
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
 export default function Home() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  // Initially logged out
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const profilePic = "/profile.jpg"; // Replace with actual user profile picture
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleLogout = () => {
+    // End session by setting isLoggedIn to false and hide dropdown
+    setIsLoggedIn(false);
+    setDropdownOpen(false);
+    console.log("User logged out");
+  };
+
+  // For demonstration only: simulate login action
+  const handleSimulateLogin = () => {
+    setIsLoggedIn(true);
+  };
 
   return (
     <div className="d-flex">
@@ -40,7 +61,7 @@ export default function Home() {
             </Link>
           </li>
           <li>
-            <Link href="/Sidebarpages/xray" >
+            <Link href="/Sidebarpages/xray">
               <span className="menu-icon">🔍</span> AI X-Ray Analyzer
             </Link>
           </li>
@@ -50,7 +71,7 @@ export default function Home() {
             </Link>
           </li>
           <li>
-            <Link href="/disease-prevention" aria-label="Go to Disease Prevention">
+            <Link href="/profile" aria-label="Go to Profile">
               <span className="menu-icon">🙍🏻‍♂️</span> Profile
             </Link>
           </li>
@@ -74,14 +95,49 @@ export default function Home() {
             <h2 className="Top">AlphaWell</h2>
           </div>
 
-          {/* Sign Up & Login */}
+          {/* Profile or Sign In/Sign Up */}
           <div className="ms-auto">
-            <Link href="/Authpages/SignIn">
-              <button className="btn btn-dark me-2">Sign Up</button>
-            </Link>
-            <Link href="/Authpages/LogIn">
-              <button className="btn btn-dark">Login</button>
-            </Link>
+            {isLoggedIn ? (
+              <div className="dropdown" style={{ position: "relative" }}>
+                <div onClick={toggleDropdown} style={{ cursor: "pointer" }}>
+                  <Image
+                    src={profilePic}
+                    alt="User Profile"
+                    width={40}
+                    height={40}
+                    className="rounded-circle"
+                  />
+                </div>
+                {dropdownOpen && (
+                  <ul
+                    className="dropdown-menu dropdown-menu-end show"
+                    style={{ position: "absolute" }}
+                  >
+                    <li>
+                      <button className="dropdown-item" onClick={handleLogout}>
+                        Logout
+                      </button>
+                    </li>
+                  </ul>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link href="/Authpages/SignIn">
+                  <button className="btn btn-dark me-2">Sign Up</button>
+                </Link>
+                <Link href="/Authpages/LogIn">
+                  <button className="btn btn-dark">Login</button>
+                </Link>
+                {/* For demo purposes: simulate a login */}
+                <button
+                  className="btn btn-secondary ms-2"
+                  onClick={handleSimulateLogin}
+                >
+                  Simulate Login
+                </button>
+              </>
+            )}
           </div>
         </nav>
 
@@ -107,23 +163,29 @@ export default function Home() {
             {/* Right Side - New Section */}
             <div className="col-md-6">
               <div className="container d-flex justify-content-center py-5 mt-5">
-                <div className="card shadow-lg p-4 d-flex flex-row align-items-center" style={{ maxWidth: "800px", borderRadius: "15px" }}>
+                <div
+                  className="card shadow-lg p-4 d-flex flex-row align-items-center"
+                  style={{ maxWidth: "800px", borderRadius: "15px" }}
+                >
                   {/* Left Side - Text */}
                   <div className="flex-grow-1 text-start px-4">
                     <h1 className="fw-bold">Welcome to AlphaWell</h1>
                     <p className="text-muted">
-                      Just ask—LiveChatAI is here to guide, assist, and support your health anytime.
+                      Just ask—LiveChatAI is here to guide, assist, and support your
+                      health anytime.
                     </p>
-                    <button className="btn btn-dark rounded-pill px-4 py-2 mt-2">Read the Docs  →</button>
+                    <button className="btn btn-dark rounded-pill px-4 py-2 mt-2">
+                      Read the Docs →
+                    </button>
                   </div>
 
                   {/* Right Side - Image */}
                   <div>
-                    <Image 
-                      src="/chat-image.png" 
-                      alt="LiveChatAI Preview" 
-                      width={700} 
-                      height={700} 
+                    <Image
+                      src="/chat-image.png"
+                      alt="LiveChatAI Preview"
+                      width={700}
+                      height={700}
                       className="img-fluid rounded"
                     />
                   </div>
