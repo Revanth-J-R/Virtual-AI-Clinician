@@ -40,7 +40,7 @@ export default function Home() {
             </Link>
           </li>
           <li>
-            <Link href="/xray-analyzer" aria-label="Go to AI X-Ray Analyzer">
+            <Link href="/Sidebarpages" >
               <span className="menu-icon">🔍</span> AI X-Ray Analyzer
             </Link>
           </li>
