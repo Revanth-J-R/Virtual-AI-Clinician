@@ -4,8 +4,7 @@
   flex-direction: column;
   align-items: center;
   background: #ffffff;
-  height: 800px;
-  height: 100vh;
+  padding-left: 40px;
   padding-top: 20px;
 }
 

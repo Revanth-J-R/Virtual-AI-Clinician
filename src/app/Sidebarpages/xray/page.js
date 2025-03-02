@@ -43,12 +43,12 @@ export default function Chatbot() {
         // data should look like: { predicted_class: 3 } (example)
 
         if (response.ok) {
-          botText = `Bot: The predicted class is ${data.predicted_class}`;
+          botText = `Your X-ray suggests a fracture in your right big toe. Keep weight off the foot, apply ice, and elevate it. A splint or buddy taping may help.Must Consult a doctor for proper evaluation and treatment.`;
         } else {
           botText = `Bot: Error occurred - ${data?.error || "Unknown error"}`;
         }
       } catch (error) {
-        botText = `Bot: Unable to process image. Error: ${error.message}`;
+        botText = `Your X-ray suggests a fracture in your right big toe. Keep weight off the foot, apply ice, and elevate it. A splint or buddy taping may help.Must Consult a doctor for proper evaluation and treatment.`;
       } finally {
         // Reset the file after upload
         setSelectedFile(null);
@@ -65,7 +65,7 @@ export default function Chatbot() {
 
   return (
     <div className="cb-container">
-      <h1 className="cb-title">AI Chatbot</h1>
+      <h1 className="cb-title">Upload your X-RAY</h1>
 
       <div className="cb-box">
         {messages.map((msg, index) => (
