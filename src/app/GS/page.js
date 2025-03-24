@@ -15,15 +15,29 @@ export default function ChatbotPage() {
   const [faqOpen, setFaqOpen] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
-
-    setMessages([...messages, { sender: "user", text: input }]);
+  
+    const userMessage = { sender: "user", text: input };
+    setMessages([...messages, userMessage]);
     setInput("");
-
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { sender: "bot", text: "I'm here to help!" }]);
-    }, 1000);
+  
+    try {
+      const response = await fetch("http://127.0.0.1:8000/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query: input }), // Changed "message" to "query" to match FastAPI model
+      });
+  
+      const data = await response.json();
+      const botMessage = { sender: "bot", text: data.response };
+  
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      console.error("Error communicating with backend:", error);
+    }
   };
 
   return (
