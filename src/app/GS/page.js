@@ -17,28 +17,33 @@ export default function ChatbotPage() {
 
   const handleSend = async () => {
     if (!input.trim()) return;
-  
-    const userMessage = { sender: "user", text: input };
-    setMessages([...messages, userMessage]);
+
+    setMessages([...messages, { sender: "user", text: input }]);
     setInput("");
-  
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60-second timeout
+
     try {
-      const response = await fetch("http://127.0.0.1:8000/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query: input }), // Changed "message" to "query" to match FastAPI model
-      });
-  
-      const data = await response.json();
-      const botMessage = { sender: "bot", text: data.response };
-  
-      setMessages((prev) => [...prev, botMessage]);
+        setMessages((prev) => [...prev, { sender: "bot", text: "⏳ Processing..." }]);
+
+        const response = await fetch("https://772e-34-133-87-249.ngrok-free.app/alpha_bot96", { 
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: input }), 
+            signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) throw new Error();
+
+        const data = await response.json();
+        setMessages((prev) => [...prev.slice(0, -1), { sender: "bot", text: data.answer }]);
     } catch (error) {
-      console.error("Error communicating with backend:", error);
+        setMessages((prev) => [...prev.slice(0, -1), { sender: "bot", text: "⚠️ An error occurred. Try again!" }]);
     }
-  };
+};
 
   return (
     <div className="chat-container">
