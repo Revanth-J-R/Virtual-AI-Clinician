@@ -5,9 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import "./gs.css"; // Import your custom CSS
+import { useRef, useEffect } from "react";
 
 export default function ChatbotPage() {
   // Chat state
+
+  const chatRef = useRef(null);
+
   const [messages, setMessages] = useState([
     { sender: "bot", text: "Hello! I'm Alpha, your AI assistant. How can I help?" },
   ]);
@@ -15,70 +19,106 @@ export default function ChatbotPage() {
   const [faqOpen, setFaqOpen] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
-
-    setMessages([...messages, { sender: "user", text: input }]);
-    setInput("");
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60-second timeout
-
-    try {
-        setMessages((prev) => [...prev, { sender: "bot", text: "⏳ Processing..." }]);
-
-        const response = await fetch("https://0e07-34-31-131-178.ngrok-free.app/alpha_bot7", { 
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query: input }), 
-            signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) throw new Error();
-
-        const data = await response.json();
-        setMessages((prev) => [...prev.slice(0, -1), { sender: "bot", text: data.answer }]);
-    } catch (error) {
-        setMessages((prev) => [...prev.slice(0, -1), { sender: "bot", text: "⚠️ An error occurred. Try again!" }]);
-    }
-};
-
-
-  // const handleSend = async () => {
-  //     if (!input.trim()) return;
+  const requiredSlots = ["name", "age", "weight", "problem", "duration", "allergies"];
+      const [userInfo, setUserInfo] = useState({}); // Stores slot values
   
-  //     const newMessages = [...messages, { sender: "user", text: input }];
-  //     setMessages(newMessages);
-  //     setInput("");
+      useEffect(() => {
+        if (chatRef.current) {
+            chatRef.current.scrollTop = chatRef.current.scrollHeight;
+        }
+    }, [messages]);
+    
+
+    const handleSend = async () => {
+      if (!input.trim()) return;
   
-  //     const controller = new AbortController();
-  //     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60-second timeout
+      setMessages([...messages, { sender: "user", text: input }]);
+      setInput("");
   
-  //     try {
-  //         setMessages((prev) => [...prev, { sender: "bot", text: "⏳ Processing..." }]);
+      // Slot Filling Logic
+      let updatedUserInfo = { ...userInfo };
+      let nextSlot = requiredSlots.find(slot => !updatedUserInfo[slot]);
   
-  //         // Extract last 5 exchanges for history
-  //         const history = newMessages.slice(-10).map(msg => `${msg.sender}: ${msg.text}`);
+      if (nextSlot) {
+          updatedUserInfo[nextSlot] = input;
+          setUserInfo(updatedUserInfo);
+          setMessages(prev => [...prev, { sender: "bot", text: `✅ Got it! Now, please provide your ${nextSlot}.` }]);
+          return;
+      }
   
-  //         const response = await fetch("https://c379-34-31-131-178.ngrok-free.app/alpha_bot96", { 
-  //             method: "POST",
-  //             headers: { "Content-Type": "application/json" },
-  //             body: JSON.stringify({ query: input, history }), 
-  //             signal: controller.signal,
-  //         });
+      // All slots filled, construct patient info
+      const patientInfo = `The patient ${updatedUserInfo.name}, age ${updatedUserInfo.age}, weight ${updatedUserInfo.weight}, 
+      has reported ${updatedUserInfo.problem} for ${updatedUserInfo.duration}. Known allergies: ${updatedUserInfo.allergies}.`;
   
-  //         clearTimeout(timeoutId);
+      // Add patient info to history
+      const history = messages.map(m => `${m.sender}: ${m.text}`).join("\n") + `\nBot: ${patientInfo}`;
   
-  //         if (!response.ok) throw new Error();
+      // Follow-up question detection
+      const followUpKeywords = ["precautions", "treatment", "medicine", "advice"];
+      const isFollowUp = followUpKeywords.some(keyword => input.toLowerCase().includes(keyword));
   
-  //         const data = await response.json();
-  //         setMessages((prev) => [...prev.slice(0, -1), { sender: "bot", text: data.answer }]);
-  //     } catch (error) {
-  //         setMessages((prev) => [...prev.slice(0, -1), { sender: "bot", text: "⚠️ An error occurred. Try again!" }]);
-  //     }
-  // };
+      // API Call
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60-second timeout
+  
+      try {
+          setMessages(prev => [...prev, { sender: "bot", text: "⏳ Processing..." }]);
+  
+          const response = await fetch("https://1e1f-34-170-161-156.ngrok-free.app/alpha_bot80", { 
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ request: input, history }), 
+              signal: controller.signal,
+          });
+  
+          clearTimeout(timeoutId);
+          if (!response.ok) throw new Error();
+  
+          const data = await response.json();
+          setMessages(prev => [...prev.slice(0, -1), { sender: "bot", text: data.answer }]);
+  
+          // Reset slots after successful query, but only if it's NOT a follow-up question
+          // if (!isFollowUp) {
+          //     setUserInfo({});
+          // }
+      } catch (error) {
+          setMessages(prev => [...prev.slice(0, -1), { sender: "bot", text: "⚠️ An error occurred. Try again!" }]);
+      }
+  };
+  
+  
+
+//   const handleSend = async () => {
+//     if (!input.trim()) return;
+
+//     setMessages([...messages, { sender: "user", text: input }]);
+//     setInput("");
+
+//     const controller = new AbortController();
+//     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60-second timeout
+
+//     try {
+//         setMessages((prev) => [...prev, { sender: "bot", text: "⏳ Processing..." }]);
+
+//         const response = await fetch("https://5853-35-187-154-206.ngrok-free.app/alpha_bot7", { 
+//             method: "POST",
+//             headers: { "Content-Type": "application/json" },
+//             body: JSON.stringify({query: input}), 
+//             signal: controller.signal,
+//         });
+
+//         clearTimeout(timeoutId);
+
+//         if (!response.ok) throw new Error();
+
+//         const data = await response.json();
+//         setMessages((prev) => [...prev.slice(0, -1), { sender: "bot", text: data.answer }]);
+//     } catch (error) {
+//         setMessages((prev) => [...prev.slice(0, -1), { sender: "bot", text: "⚠️ An error occurred. Try again!" }]);
+//     }
+// };
+
+
   
 
   return (
@@ -170,7 +210,7 @@ export default function ChatbotPage() {
 
         {/* Chat Box */}
         <div className="chat-box">
-          <div className="messages">
+          <div className="messages" ref={chatRef}>
             {messages.map((msg, index) => (
               <div key={index} className={`message ${msg.sender}`}>
                 {msg.text}
