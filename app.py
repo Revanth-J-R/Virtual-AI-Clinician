@@ -5,6 +5,7 @@ from PIL import Image
 import torch
 import io
 
+
 app = FastAPI()
 
 app.add_middleware(
