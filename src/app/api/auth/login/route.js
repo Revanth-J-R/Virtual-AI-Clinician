@@ -2,7 +2,7 @@
 import admin from "@/app/lib/firebaseAdmin";
 import { NextResponse } from "next/server";
 
-// We’ll accept a POST with { token: string } in JSON
+
 export async function POST(request) {
   try {
     const { token } = await request.json();

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import "./article.css";
 
+
 export default function NewsPage() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);

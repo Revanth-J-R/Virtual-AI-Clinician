@@ -16,7 +16,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load Model
 MODEL_PATH = "results"
 processor = AutoImageProcessor.from_pretrained(MODEL_PATH)
 model = AutoModelForImageClassification.from_pretrained(MODEL_PATH)

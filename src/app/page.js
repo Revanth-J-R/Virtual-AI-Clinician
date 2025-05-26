@@ -18,7 +18,6 @@ export default function Home() {
   };
 
   const handleLogout = () => {
-    // End session by setting isLoggedIn to false and hide dropdown
     setIsLoggedIn(false);
     setDropdownOpen(false);
     console.log("User logged out");

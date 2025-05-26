@@ -14,6 +14,7 @@ export default function ProfilePage() {
     { id: 3, name: "Entity Three", description: "This is entity three." }
   ]);
 
+  
   useEffect(() => {
     // Listen for auth state changes and update user
     const unsubscribe = auth.onAuthStateChanged((user) => {

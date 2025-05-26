@@ -8,8 +8,6 @@ import "./gs.css"; // Import your custom CSS
 import { useRef, useEffect } from "react";
 
 export default function ChatbotPage() {
-  // Chat state
-
   const chatRef = useRef(null);
 
   const [messages, setMessages] = useState([

@@ -8,7 +8,6 @@ export async function GET() {
     const response = await fetch(url);
     const contentType = response.headers.get("content-type");
 
-    // Handle empty response case
     const textResponse = await response.text();
     if (!textResponse) {
       return Response.json({ error: "Empty response from API" }, { status: 500 });

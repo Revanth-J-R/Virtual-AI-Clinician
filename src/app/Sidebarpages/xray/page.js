@@ -21,7 +21,6 @@ export default function Chatbot() {
     };
     setMessages((prev) => [...prev, userMsg]);
 
-    // Clear the input field
     setInput("");
 
     // 2) Prepare a bot response (initially placeholder)

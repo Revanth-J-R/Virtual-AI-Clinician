@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@100..900&family=Roboto+Slab:wght@100..900&display=swap');
 
-/* Global Styles */
 body {
   background: url('/your-image.jpg') no-repeat center center/cover;
   min-height: 100vh;
