@@ -1,66 +1,165 @@
+// pages/profile.js
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { auth } from "./firebaseConfig"; // Adjust the path as needed
+import { useState } from "react";
+import './profile.css'
+export default function Profile() {
+  const [formData, setFormData] = useState({
+    avatarUrl: "/images/default-avatar.png",
+    name: "John Doe",
+    title: "Senior Software Engineer",
+    bio: "Write a brief bio about yourself here.",
+    email: "john.doe@example.com",
+    phone: "+1 (555) 123-4567",
+    location: "San Francisco, CA",
+    website: "https://johndoe.dev",
+  });
 
-export default function ProfilePage() {
-  const [user, setUser] = useState(null);
-  // Example additional entities; you can replace these with real data
-  const [entities] = useState([
-    { id: 1, name: "Entity One", description: "This is entity one." },
-    { id: 2, name: "Entity Two", description: "This is entity two." },
-    { id: 3, name: "Entity Three", description: "This is entity three." }
-  ]);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-  
-  useEffect(() => {
-    // Listen for auth state changes and update user
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setUser(user);
+  const handleAvatarChange = (e) => {
+    const url = e.target.value;
+    setFormData((prev) => ({ ...prev, avatarUrl: url }));
+  };
+
+  const handleReset = () => {
+    setFormData({
+      avatarUrl: "/images/default-avatar.png",
+      name: "John Doe",
+      title: "Senior Software Engineer",
+      bio: "Write a brief bio about yourself here.",
+      email: "john.doe@example.com",
+      phone: "+1 (555) 123-4567",
+      location: "San Francisco, CA",
+      website: "https://johndoe.dev",
     });
-    return () => unsubscribe();
-  }, []);
-
-  if (!user) {
-    return (
-      <div style={{ padding: "20px" }}>
-        <h2>You are not logged in.</h2>
-        <p>
-          Please <Link href="/Authpages/LogIn">Log In</Link> to view your profile.
-        </p>
-      </div>
-    );
-  }
+  };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Your Profile</h1>
-      <div style={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
-        <Image
-          src={user.photoURL || "/default-profile.png"}
-          alt="Profile Picture"
-          width={100}
-          height={100}
-          className="rounded-circle"
-        />
-        <div style={{ marginLeft: "20px" }}>
-          <h2>{user.displayName || "No Name Provided"}</h2>
-          <p>Email: {user.email}</p>
-          <p>User ID: {user.uid}</p>
+    <main className="profile-container">
+      <header className="profile-header">
+        <div className="profile-image-wrapper">
+          <img
+            src={formData.avatarUrl}
+            alt="Avatar"
+            className="profile-image"
+          />
         </div>
-      </div>
-      <hr />
-      <h3>Other Entities</h3>
-      <ul>
-        {entities.map((entity) => (
-          <li key={entity.id}>
-            <h4>{entity.name}</h4>
-            <p>{entity.description}</p>
-          </li>
-        ))}
-      </ul>
-    </div>
+        <div className="avatar-input">
+          <label>
+            Avatar URL:
+            <input
+              type="text"
+              name="avatarUrl"
+              value={formData.avatarUrl}
+              onChange={handleAvatarChange}
+              className="input-field"
+            />
+          </label>
+        </div>
+      </header>
+
+      <section className="profile-form">
+        <div className="form-group">
+          <label>
+            Name:
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="input-field"
+            />
+          </label>
+        </div>
+
+        <div className="form-group">
+          <label>
+            Title:
+            <input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              className="input-field"
+            />
+          </label>
+        </div>
+
+        <div className="form-group">
+          <label>
+            Bio:
+            <textarea
+              name="bio"
+              value={formData.bio}
+              onChange={handleChange}
+              className="textarea-field"
+              rows={4}
+            />
+          </label>
+        </div>
+
+        <div className="form-group">
+          <label>
+            Email:
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="input-field"
+            />
+          </label>
+        </div>
+
+        <div className="form-group">
+          <label>
+            Phone:
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className="input-field"
+            />
+          </label>
+        </div>
+
+        <div className="form-group">
+          <label>
+            Location:
+            <input
+              type="text"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              className="input-field"
+            />
+          </label>
+        </div>
+
+        <div className="form-group">
+          <label>
+            Website:
+            <input
+              type="url"
+              name="website"
+              value={formData.website}
+              onChange={handleChange}
+              className="input-field"
+            />
+          </label>
+        </div>
+
+        <div className="form-actions">
+          <button type="button" onClick={handleReset} className="btn-reset">
+            Reset
+          </button>
+        </div>
+      </section>
+    </main>
   );
 }
