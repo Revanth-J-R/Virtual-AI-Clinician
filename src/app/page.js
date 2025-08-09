@@ -153,7 +153,7 @@ export default function Home() {
                 understands, responds, and supports you with the warmth and
                 intelligence of human touch.
               </p>
-              <Link href="/GS" className="get-started-btn">
+              <Link href="/Sidebarpages/profilemanger" className="get-started-btn">
                 Get Started
                 <span className="text-lg">→</span>
               </Link>
