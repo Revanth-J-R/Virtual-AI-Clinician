@@ -39,20 +39,37 @@ const Profile = () => {
   const sampleProfiles = [
     {
       id: '1',
-      name: 'John Smith',
-      age: 45,
-      role: 'Father',
+      name: 'Revanth',
+      age: 18,
+      role: 'Son',
       avatar: '👨‍⚕️',
       createdAt: new Date().toISOString()
     },
     {
       id: '2',
-      name: 'Mary Smith',
-      age: 42,
+      name: 'Prasenna',
+      age: 32,
       role: 'Mother',
       avatar: '👩‍⚕️',
       createdAt: new Date().toISOString()
+    },
+    {
+      id: '3',
+      name: 'Aravindh',
+      age: 22,
+      role: 'Brother',
+      avatar: '👩‍⚕️',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: '4',
+      name: 'Mithun',
+      age: 23,
+      role: 'Brother',
+      avatar: '👩‍⚕️',
+      createdAt: new Date().toISOString()
     }
+    
   ];
 
   // Load profiles from localStorage on component mount
