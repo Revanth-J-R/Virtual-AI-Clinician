@@ -9,7 +9,7 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { auth } from "../SignIn/firebaseConfig";
+import { auth } from "../../firebaseConfig";
 import "./login.css";
 
 export default function Login() {
