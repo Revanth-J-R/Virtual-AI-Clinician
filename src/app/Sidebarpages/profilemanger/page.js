@@ -24,8 +24,8 @@ const Profile = () => {
   ];
 
   const defaultAvatars = {
-    'Father': '👨‍⚕️',
-    'Mother': '👩‍⚕️', 
+    'Father': '🤰🏻',
+    'Mother': '👧🏻', 
     'Son': '👦',
     'Daughter': '👧',
     'Grandfather': '👴',
@@ -48,9 +48,9 @@ const Profile = () => {
     {
       id: '2',
       name: 'Prasenna',
-      age: 32,
-      role: 'Mother',
-      avatar: '👩‍⚕️',
+      age: 8,
+      role: 'GOD',
+      avatar: '🤰🏻',
       createdAt: new Date().toISOString()
     },
     {
@@ -58,7 +58,7 @@ const Profile = () => {
       name: 'Aravindh',
       age: 22,
       role: 'Brother',
-      avatar: '👩‍⚕️',
+      avatar: '👩',
       createdAt: new Date().toISOString()
     },
     {
