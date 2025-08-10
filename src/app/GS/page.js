@@ -417,9 +417,9 @@ export default function ChatbotPage() {
         aria-label="Chat history topics"
         style={{
           position: "fixed",
-          top: "80px",
-          right: 0,
-          width: 260,
+          top: "70px",
+          right: 2,
+          width: 350,
           height: "calc(100vh - 80px)",
           borderLeft: "1px solid #ddd",
           backgroundColor: "#f9f9f9",
@@ -463,7 +463,7 @@ export default function ChatbotPage() {
         style={{
           position: "fixed",
           bottom: 20,
-          right: 20,
+          right: 10,
           width: faqOpen ? 240 : 80,
           background: "#fff",
           boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
@@ -479,23 +479,24 @@ export default function ChatbotPage() {
           aria-expanded={faqOpen}
           aria-controls="faq-content"
           style={{
-            background: "#007bff",
-            color: "#fff",
+            background: "#e3f2fd",
+            color: "#090808ff",
             border: "none",
             padding: "8px 12px",
             width: "100%",
-            fontSize: "0.9rem",
+            fontSize: "0.8rem",
             cursor: "pointer",
             borderRadius: 5,
+            fontWeight: "bold"
           }}
         >
-          {faqOpen ? "❌ Close FAQ" : "❓ FAQ"}
+          {faqOpen ? "✖️ Close FAQ" : "❔ FAQ"}
         </button>
         {faqOpen && (
           <div
             id="faq-content"
             className="faq-content"
-            style={{ marginTop: 10, fontSize: "0.8rem", color: "#000" }}
+            style={{ marginTop: 10, fontSize: "0.6rem", color: "#000" }}
           >
             <h3 style={{ fontSize: "1rem", marginBottom: 8 }}>Frequently Asked Questions</h3>
             <ul style={{ listStyleType: "none", padding: 0 }}>
