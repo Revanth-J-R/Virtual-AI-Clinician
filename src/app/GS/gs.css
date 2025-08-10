@@ -156,3 +156,55 @@
 .faq-content li {
   margin-bottom: 6px;
 }
+/* Chat History Sidebar */
+.chat-history-sidebar {
+  position: fixed;
+  top: 80px; /* Below navbar */
+  right: 0;
+  width: 260px;
+  height: calc(100vh - 100px);
+  background: #fff;
+  box-shadow: -2px 0 6px rgba(0,0,0,0.1);
+  border-left: 1px solid #ddd;
+  overflow-y: auto;
+  padding: 15px;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+  z-index: 1000;
+}
+
+.chat-history-sidebar h5 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+.chat-history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.chat-history-list li {
+  margin-bottom: 10px;
+}
+
+.chat-history-btn {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #007bff;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.chat-history-btn:hover,
+.chat-history-btn:focus {
+  background-color: #e6f0ff;
+  outline: none;
+}

@@ -3,11 +3,19 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './Profile.module.css';
+import { 
+  savePatientProfile, 
+  updatePatientProfile, 
+  getAllPatientProfiles, 
+  deletePatientProfile 
+} from './patientService';
 
 const Profile = () => {
   const [profiles, setProfiles] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingProfile, setEditingProfile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
 
   // Form states with extra patient details
@@ -43,79 +51,56 @@ const Profile = () => {
     'Other': '👤'
   };
 
-  // Sample initial profiles
-  const sampleProfiles = [
-    {
-      id: '1',
-      name: 'Revanth',
-      age: 18,
-      gender: 'Male',
-      role: 'Son',
-      weight: '70',
-      height: '175',
-      bloodGroup: 'B+',
-      allergies: 'None',
-      medicalConditions: 'None',
-      contact: '9876543210',
-      address: 'Chennai',
-      avatar: '👨‍⚕️',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: '2',
-      name: 'Prasenna',
-      age: 32,
-      role: 'Mother',
-      avatar: '👩‍⚕️',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: '3',
-      name: 'Aravindh',
-      age: 22,
-      role: 'Brother',
-      avatar: '👩‍⚕️',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: '4',
-      name: 'Mithun',
-      age: 23,
-      role: 'Brother',
-      avatar: '👩‍⚕️',
-      createdAt: new Date().toISOString()
-    }
-    
-  ];
-
-  // Load profiles from localStorage on mount
+  // Load profiles from Firestore on mount
   useEffect(() => {
-    const savedProfiles = localStorage.getItem('familyProfiles');
-    if (savedProfiles) {
-      setProfiles(JSON.parse(savedProfiles));
-    } else {
-      setProfiles(sampleProfiles);
-      localStorage.setItem('familyProfiles', JSON.stringify(sampleProfiles));
-    }
+    loadProfiles();
   }, []);
 
-  // Save profiles to localStorage when they change
-  useEffect(() => {
-    if (profiles.length > 0) {
-      localStorage.setItem('familyProfiles', JSON.stringify(profiles));
+  const loadProfiles = async () => {
+    try {
+      setLoading(true);
+      const firebaseProfiles = await getAllPatientProfiles();
+      
+      // If no profiles in Firebase, create sample profile
+      if (firebaseProfiles.length === 0) {
+        const sampleProfile = {
+          name: 'Revanth',
+          age: 18,
+          gender: 'Male',
+          role: 'Son',
+          weight: '70',
+          height: '175',
+          bloodGroup: 'B+',
+          allergies: 'None',
+          medicalConditions: 'None',
+          contact: '9876543210',
+          address: 'Chennai',
+          avatar: '👨‍⚕️'
+        };
+        
+        const profileId = await savePatientProfile(sampleProfile);
+        setProfiles([{ id: profileId, ...sampleProfile }]);
+      } else {
+        setProfiles(firebaseProfiles);
+      }
+    } catch (error) {
+      console.error('Error loading profiles:', error);
+      setError('Failed to load profiles. Please try again.');
+    } finally {
+      setLoading(false);
     }
-  }, [profiles]);
+  };
 
-  const handleCreateProfile = (e) => {
+  const handleCreateProfile = async (e) => {
     e.preventDefault();
+    setError('');
 
     if (!formData.name || !formData.age || !formData.gender || !formData.role || !formData.bloodGroup || !formData.contact) {
-      alert('Please fill in all required fields');
+      setError('Please fill in all required fields');
       return;
     }
 
     const profileData = {
-      id: editingProfile ? editingProfile.id : Date.now().toString(),
       name: formData.name,
       age: parseInt(formData.age),
       gender: formData.gender,
@@ -124,33 +109,50 @@ const Profile = () => {
       weight: formData.weight,
       height: formData.height,
       bloodGroup: formData.bloodGroup,
-      allergies: formData.allergies,
-      medicalConditions: formData.medicalConditions,
+      allergies: formData.allergies || 'None',
+      medicalConditions: formData.medicalConditions || 'None',
       contact: formData.contact,
-      address: formData.address,
-      createdAt: editingProfile ? editingProfile.createdAt : new Date().toISOString()
+      address: formData.address
     };
 
-    if (editingProfile) {
-      setProfiles(profiles.map(profile =>
-        profile.id === editingProfile.id ? profileData : profile
-      ));
-    } else {
-      setProfiles([...profiles, profileData]);
-    }
+    try {
+      setLoading(true);
 
-    setShowModal(false);
-    setEditingProfile(null);
-    setFormData({
-      name: '', age: '', gender: '', role: '', avatar: '',
-      weight: '', height: '', bloodGroup: '', allergies: '',
-      medicalConditions: '', contact: '', address: ''
-    });
+      if (editingProfile) {
+        // Update existing profile
+        await updatePatientProfile(editingProfile.id, profileData);
+        setProfiles(profiles.map(profile =>
+          profile.id === editingProfile.id ? { id: editingProfile.id, ...profileData } : profile
+        ));
+      } else {
+        // Create new profile
+        const profileId = await savePatientProfile(profileData);
+        setProfiles([...profiles, { id: profileId, ...profileData }]);
+      }
+
+      setShowModal(false);
+      setEditingProfile(null);
+      resetFormData();
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setError('Failed to save profile. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteProfile = (profileId) => {
-    if (window.confirm('Are you sure you want to delete this profile? All chat history will be lost.')) {
-      setProfiles(profiles.filter(profile => profile.id !== profileId));
+  const handleDeleteProfile = async (profileId) => {
+    if (window.confirm('Are you sure you want to delete this profile? All data will be lost.')) {
+      try {
+        setLoading(true);
+        await deletePatientProfile(profileId);
+        setProfiles(profiles.filter(profile => profile.id !== profileId));
+      } catch (error) {
+        console.error('Error deleting profile:', error);
+        setError('Failed to delete profile. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -162,30 +164,36 @@ const Profile = () => {
       gender: profile.gender,
       role: profile.role,
       avatar: profile.avatar,
-      weight: profile.weight,
-      height: profile.height,
+      weight: profile.weight || '',
+      height: profile.height || '',
       bloodGroup: profile.bloodGroup,
-      allergies: profile.allergies,
-      medicalConditions: profile.medicalConditions,
+      allergies: profile.allergies || '',
+      medicalConditions: profile.medicalConditions || '',
       contact: profile.contact,
-      address: profile.address
+      address: profile.address || ''
     });
     setShowModal(true);
   };
 
   const handleSelectProfile = (profile) => {
+    // Store selected profile in localStorage for the session
     localStorage.setItem('selectedProfile', JSON.stringify(profile));
     router.push('/GS');
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setEditingProfile(null);
+  const resetFormData = () => {
     setFormData({
       name: '', age: '', gender: '', role: '', avatar: '',
       weight: '', height: '', bloodGroup: '', allergies: '',
       medicalConditions: '', contact: '', address: ''
     });
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingProfile(null);
+    setError('');
+    resetFormData();
   };
 
   return (
@@ -194,6 +202,18 @@ const Profile = () => {
         <h1 className={styles.title}>Who's seeking health support today?</h1>
         <p className={styles.subtitle}>Choose your profile to continue with personalized care</p>
       </div>
+
+      {error && (
+        <div className={styles.error}>
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className={styles.loading}>
+          Loading...
+        </div>
+      )}
 
       <div className={styles.profilesWrapper}>
         <div className={styles.profilesGrid}>
@@ -211,11 +231,13 @@ const Profile = () => {
                     className={styles.editBtn}
                     onClick={(e) => { e.stopPropagation(); handleEditProfile(profile); }}
                     title="Edit Profile"
+                    disabled={loading}
                   >✏️</button>
                   <button
                     className={styles.deleteBtn}
                     onClick={(e) => { e.stopPropagation(); handleDeleteProfile(profile.id); }}
                     title="Delete Profile"
+                    disabled={loading}
                   >🗑️</button>
                 </div>
               </div>
@@ -253,6 +275,12 @@ const Profile = () => {
               <button className={styles.closeBtn} onClick={closeModal}>×</button>
             </div>
 
+            {error && (
+              <div className={styles.modalError}>
+                {error}
+              </div>
+            )}
+
             <form onSubmit={handleCreateProfile} className={styles.form}>
               {/* Name */}
               <div className={styles.inputGroup}>
@@ -262,6 +290,7 @@ const Profile = () => {
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -274,6 +303,7 @@ const Profile = () => {
                     value={formData.age}
                     onChange={(e) => setFormData({...formData, age: e.target.value})}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className={styles.inputGroup}>
@@ -282,6 +312,7 @@ const Profile = () => {
                     value={formData.gender}
                     onChange={(e) => setFormData({...formData, gender: e.target.value})}
                     required
+                    disabled={loading}
                   >
                     <option value="">Select</option>
                     <option value="Male">Male</option>
@@ -298,6 +329,7 @@ const Profile = () => {
                   value={formData.role}
                   onChange={(e) => setFormData({...formData, role: e.target.value})}
                   required
+                  disabled={loading}
                 >
                   <option value="">Select</option>
                   {familyRoles.map(role => (
@@ -314,6 +346,7 @@ const Profile = () => {
                     type="number" min="1" max="300"
                     value={formData.weight}
                     onChange={(e) => setFormData({...formData, weight: e.target.value})}
+                    disabled={loading}
                   />
                 </div>
                 <div className={styles.inputGroup}>
@@ -322,6 +355,7 @@ const Profile = () => {
                     type="number" min="30" max="250"
                     value={formData.height}
                     onChange={(e) => setFormData({...formData, height: e.target.value})}
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -333,6 +367,7 @@ const Profile = () => {
                   value={formData.bloodGroup}
                   onChange={(e) => setFormData({...formData, bloodGroup: e.target.value})}
                   required
+                  disabled={loading}
                 >
                   <option value="">Select</option>
                   {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (
@@ -349,6 +384,7 @@ const Profile = () => {
                   value={formData.allergies}
                   onChange={(e) => setFormData({...formData, allergies: e.target.value})}
                   placeholder="e.g. Penicillin, Dust"
+                  disabled={loading}
                 />
               </div>
 
@@ -360,6 +396,7 @@ const Profile = () => {
                   value={formData.medicalConditions}
                   onChange={(e) => setFormData({...formData, medicalConditions: e.target.value})}
                   placeholder="e.g. Diabetes"
+                  disabled={loading}
                 />
               </div>
 
@@ -371,6 +408,7 @@ const Profile = () => {
                   value={formData.contact}
                   onChange={(e) => setFormData({...formData, contact: e.target.value})}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -380,6 +418,7 @@ const Profile = () => {
                 <textarea
                   value={formData.address}
                   onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  disabled={loading}
                 />
               </div>
 
@@ -391,13 +430,16 @@ const Profile = () => {
                   value={formData.avatar}
                   onChange={(e) => setFormData({...formData, avatar: e.target.value})}
                   placeholder="Enter emoji or leave blank"
+                  disabled={loading}
                 />
               </div>
 
               <div className={styles.buttonGroup}>
-                <button type="button" onClick={closeModal} className={styles.cancelBtn}>Cancel</button>
-                <button type="submit" className={styles.saveBtn}>
-                  {editingProfile ? 'Update Profile' : 'Create Profile'}
+                <button type="button" onClick={closeModal} className={styles.cancelBtn} disabled={loading}>
+                  Cancel
+                </button>
+                <button type="submit" className={styles.saveBtn} disabled={loading}>
+                  {loading ? 'Saving...' : (editingProfile ? 'Update Profile' : 'Create Profile')}
                 </button>
               </div>
             </form>
@@ -409,4 +451,3 @@ const Profile = () => {
 };
 
 export default Profile;
-
