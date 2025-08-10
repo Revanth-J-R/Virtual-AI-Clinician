@@ -1,16 +1,14 @@
-"use client";
+'use client';
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import "./gs.css"; // Your existing CSS + sidebar styles here
-// Import your firebaseChat helpers if you add Firestore saving
 // import { createChatSession, saveMessage } from "../lib/firebaseChat";
 
 export default function ChatbotPage() {
   const chatRef = useRef(null);
-  const [sessionId, setSessionId] = useState(null);
 
   // Chat messages & input
   const [messages, setMessages] = useState([
@@ -22,16 +20,24 @@ export default function ChatbotPage() {
   const [faqOpen, setFaqOpen] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-  // Slot filling states
-  const requiredSlots = ["name", "age", "weight", "problem", "duration", "allergies"];
-  const [userInfo, setUserInfo] = useState({});
-
   // Example chat topics for history sidebar
   const [chatTopics, setChatTopics] = useState([
     { id: 1, title: "Consultation about Flu Symptoms" },
     { id: 2, title: "Allergy Advice" },
     { id: 3, title: "Medication Follow-up" },
   ]);
+
+  // --- TTS state ---
+  const [voices, setVoices] = useState([]);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [gifKey, setGifKey] = useState(0); // to re-render gif when speaking
+  const synthRef = useRef(typeof window !== "undefined" ? window.speechSynthesis : null);
+  const currentUtterRef = useRef(null);
+  const fadeTimeoutRef = useRef(null);
+
+  // Control this value to change how long the avatar GIF stays visible after speech ends (milliseconds)
+  const GIF_FADE_MS = -3000000; // ← change this to 0 / 200 / 500 etc.
 
   // Scroll chat to bottom on new message
   useEffect(() => {
@@ -40,57 +46,148 @@ export default function ChatbotPage() {
     }
   }, [messages]);
 
-  // Example: create a new chat session on mount (you can hook your firebase logic here)
-  // useEffect(() => {
-  //   async function initSession() {
-  //     const newSessionId = await createChatSession("Chat started");
-  //     setSessionId(newSessionId);
-  //   }
-  //   initSession();
-  // }, []);
+  // Load available voices
+  useEffect(() => {
+    if (!synthRef.current) return;
+
+    const loadVoices = () => {
+      const v = synthRef.current.getVoices() || [];
+      setVoices(v);
+    };
+
+    loadVoices();
+    synthRef.current.onvoiceschanged = loadVoices;
+
+    return () => {
+      if (synthRef.current) synthRef.current.onvoiceschanged = null;
+    };
+  }, []);
+
+  // speakText helper
+  const speakText = (text, opts = {}) => {
+    if (isMuted) return;
+    if (!synthRef.current || !text) return;
+
+    // cancel any ongoing speech
+    if (synthRef.current.speaking) {
+      try { synthRef.current.cancel(); } catch (e) {}
+    }
+
+    // clear any pending fade timeout so gif state is consistent
+    if (fadeTimeoutRef.current) {
+      clearTimeout(fadeTimeoutRef.current);
+      fadeTimeoutRef.current = null;
+    }
+
+    const utter = new SpeechSynthesisUtterance(text);
+    currentUtterRef.current = utter;
+
+    const female = voices.find((v) =>
+      /female|zira|google uk english female/i.test(v.name)
+    );
+    if (opts.voiceName) {
+      const v = voices.find((v) => v.name.includes(opts.voiceName));
+      if (v) utter.voice = v;
+    } else if (female) {
+      utter.voice = female;
+    }
+
+    utter.lang = opts.lang || "en-US";
+    utter.rate = opts.rate ?? 1;
+    utter.pitch = opts.pitch ?? 1;
+    utter.volume = opts.volume ?? 1;
+
+    utter.onstart = () => {
+      // When speech starts, show the GIF immediately
+      // clear any previous fade timer (precaution)
+      if (fadeTimeoutRef.current) {
+        clearTimeout(fadeTimeoutRef.current);
+        fadeTimeoutRef.current = null;
+      }
+      setIsSpeaking(true);
+      setGifKey((k) => k + 1);
+    };
+
+    // When speech ends, keep the GIF visible for GIF_FADE_MS milliseconds, then hide it
+    utter.onend = () => {
+      // clear any existing timeout first
+      if (fadeTimeoutRef.current) {
+        clearTimeout(fadeTimeoutRef.current);
+      }
+      fadeTimeoutRef.current = setTimeout(() => {
+        setIsSpeaking(false);
+        currentUtterRef.current = null;
+        fadeTimeoutRef.current = null;
+      }, GIF_FADE_MS);
+    };
+
+    utter.onerror = () => {
+      // On error, also hide after the fade delay so UI is consistent
+      if (fadeTimeoutRef.current) {
+        clearTimeout(fadeTimeoutRef.current);
+      }
+      fadeTimeoutRef.current = setTimeout(() => {
+        setIsSpeaking(false);
+        currentUtterRef.current = null;
+        fadeTimeoutRef.current = null;
+      }, GIF_FADE_MS);
+    };
+
+    try {
+      synthRef.current.speak(utter);
+    } catch (err) {
+      console.error("TTS speak error", err);
+      // ensure speaking state is cleaned up
+      if (fadeTimeoutRef.current) {
+        clearTimeout(fadeTimeoutRef.current);
+        fadeTimeoutRef.current = null;
+      }
+      setIsSpeaking(false);
+      currentUtterRef.current = null;
+    }
+  };
+
+  const stopSpeaking = () => {
+    if (!synthRef.current) return;
+    try {
+      synthRef.current.cancel();
+    } catch (e) {}
+    // clear any fade timeout and hide the gif immediately
+    if (fadeTimeoutRef.current) {
+      clearTimeout(fadeTimeoutRef.current);
+      fadeTimeoutRef.current = null;
+    }
+    setIsSpeaking(false);
+    currentUtterRef.current = null;
+  };
+
+  const toggleMute = () => {
+    setIsMuted((m) => {
+      if (!m) stopSpeaking();
+      return !m;
+    });
+  };
+
+  // NOTE: Removed the "speak initial bot greeting once on mount" effect per your request.
+  // If you later want to re-enable the initial speak, add a useEffect similar to:
+  // useEffect(() => { speakText(messages[0]?.text); }, []); <-- but currently disabled.
 
   // Handle navigation on chat topic click
   const goToTopic = (id) => {
     alert(`Navigate to chat topic ID: ${id}`);
-    // Use router or Link to navigate to detailed chat page if implemented
   };
 
   const handleSend = async () => {
     if (!input.trim()) return;
 
-    // Add user message locally
-    setMessages((prev) => [...prev, { sender: "user", text: input }]);
+    const userMsg = input.trim();
 
-    // TODO: Save user message to Firebase here, if desired
-
-    // Clear input
+    // Build the new messages array immediately so history uses the latest message
+    const newMessages = [...messages, { sender: "user", text: userMsg }];
+    setMessages(newMessages);
     setInput("");
 
-    // Slot Filling Logic
-    let updatedUserInfo = { ...userInfo };
-    let nextSlot = requiredSlots.find((slot) => !updatedUserInfo[slot]);
-
-    if (nextSlot) {
-      updatedUserInfo[nextSlot] = input;
-      setUserInfo(updatedUserInfo);
-      setMessages((prev) => [
-        ...prev,
-        { sender: "bot", text: `✅ Got it! Now, please provide your ${nextSlot}.` },
-      ]);
-      return;
-    }
-
-    // All slots filled, construct patient info
-    const patientInfo = `The patient ${updatedUserInfo.name}, age ${updatedUserInfo.age}, weight ${updatedUserInfo.weight}, 
-      has reported ${updatedUserInfo.problem} for ${updatedUserInfo.duration}. Known allergies: ${updatedUserInfo.allergies}.`;
-
-    const history =
-      messages.map((m) => `${m.sender}: ${m.text}`).join("\n") + `\nBot: ${patientInfo}`;
-
-    const followUpKeywords = ["precautions", "treatment", "medicine", "advice"];
-    const isFollowUp = followUpKeywords.some((keyword) =>
-      input.toLowerCase().includes(keyword)
-    );
+    const history = newMessages.map((m) => `${m.sender}: ${m.text}`).join("\n");
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 seconds
@@ -101,7 +198,7 @@ export default function ChatbotPage() {
       const response = await fetch("https://1e1f-34-170-161-156.ngrok-free.app/alpha_bot80", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ request: input, history }),
+        body: JSON.stringify({ request: userMsg, history }),
         signal: controller.signal,
       });
 
@@ -109,19 +206,19 @@ export default function ChatbotPage() {
       if (!response.ok) throw new Error();
 
       const data = await response.json();
+      const answer = data.answer ?? "Sorry, I couldn't generate an answer.";
 
       // Replace "Processing..." with bot response
-      setMessages((prev) => [...prev.slice(0, -1), { sender: "bot", text: data.answer }]);
+      setMessages((prev) => [...prev.slice(0, -1), { sender: "bot", text: answer }]);
 
-      // TODO: Save bot response to Firebase here, if desired
+      // Speak the bot answer
+      speakText(answer);
 
-      // Optional: reset slots if not a follow up
-      // if (!isFollowUp) setUserInfo({});
     } catch (error) {
-      setMessages((prev) => [
-        ...prev.slice(0, -1),
-        { sender: "bot", text: "⚠️ An error occurred. Try again!" },
-      ]);
+      clearTimeout(timeoutId);
+      const errMsg = " An error occurred. Try again!";
+      setMessages((prev) => [...prev.slice(0, -1), { sender: "bot", text: errMsg }]);
+      speakText(errMsg);
     }
   };
 
@@ -139,7 +236,16 @@ export default function ChatbotPage() {
           </button>
           <div className="navbar-brand">AlphaWell</div>
         </div>
-        <div className="profile-icon">
+        <div className="d-flex align-items-center">
+          <button
+            className="btn btn-outline-primary me-2"
+            onClick={toggleMute}
+            aria-pressed={isMuted}
+            aria-label={isMuted ? "Unmute" : "Mute"}
+          >
+            {isMuted ? "🔇 Unmute" : "🔊 Mute"}
+          </button>
+
           <Link href="/profile" aria-label="Go to profile">
             <img
               src="https://cdn-icons-png.flaticon.com/512/6522/6522516.png"
@@ -222,7 +328,7 @@ export default function ChatbotPage() {
               </Link>
             </li>
             <li>
-              <Link href="/profile" aria-label="Go to Profile">
+              <Link href="/Sidebarpages/profile" aria-label="Go to Profile">
                 <span className="menu-icon" style={{ margin: "5px" }}>
                   <img src="/user-48.png" width="20" height="20" alt="" />
                 </span>{" "}
@@ -248,13 +354,25 @@ export default function ChatbotPage() {
       >
         {/* AI Avatar */}
         <div className="ai-avatar">
-          <Image
-            src="/doc.jpg"
-            alt="AI Avatar"
-            width={200}
-            height={200}
-            className="avatar-image"
-          />
+          <div className="avatar-wrapper" aria-hidden={isSpeaking ? "false" : "true"}>
+            <Image
+              src="/doc.jpg"
+              alt="AI Avatar"
+              width={200}
+              height={200}
+              className="avatar-image"
+            />
+            {isSpeaking && (
+              <Image
+                key={gifKey}
+                src="/doc.gif"
+                alt="AI Speaking Animation"
+                width={200}
+                height={200}
+                className="gif-overlay"
+              />
+            )}
+          </div>
         </div>
 
         {/* Chat Box */}
