@@ -10,22 +10,30 @@ const Profile = () => {
   const [editingProfile, setEditingProfile] = useState(null);
   const router = useRouter();
 
-  // Form states
+  // Form states with extra patient details
   const [formData, setFormData] = useState({
     name: '',
     age: '',
+    gender: '',
     role: '',
-    avatar: ''
+    avatar: '',
+    weight: '',
+    height: '',
+    bloodGroup: '',
+    allergies: '',
+    medicalConditions: '',
+    contact: '',
+    address: ''
   });
 
   const familyRoles = [
-    'Father', 'Mother', 'Son', 'Daughter', 
+    'Father', 'Mother', 'Son', 'Daughter',
     'Grandfather', 'Grandmother', 'Uncle', 'Aunt', 'Other'
   ];
 
   const defaultAvatars = {
-    'Father': '🤰🏻',
-    'Mother': '👧🏻', 
+    'Father': '👨‍⚕️',
+    'Mother': '👩‍⚕️', 
     'Son': '👦',
     'Daughter': '👧',
     'Grandfather': '👴',
@@ -35,22 +43,30 @@ const Profile = () => {
     'Other': '👤'
   };
 
-  // Sample initial profiles (for demo)
+  // Sample initial profiles
   const sampleProfiles = [
     {
       id: '1',
       name: 'Revanth',
       age: 18,
+      gender: 'Male',
       role: 'Son',
+      weight: '70',
+      height: '175',
+      bloodGroup: 'B+',
+      allergies: 'None',
+      medicalConditions: 'None',
+      contact: '9876543210',
+      address: 'Chennai',
       avatar: '👨‍⚕️',
       createdAt: new Date().toISOString()
     },
     {
       id: '2',
       name: 'Prasenna',
-      age: 8,
-      role: 'GOD',
-      avatar: '🤰🏻',
+      age: 32,
+      role: 'Mother',
+      avatar: '👩‍⚕️',
       createdAt: new Date().toISOString()
     },
     {
@@ -58,7 +74,7 @@ const Profile = () => {
       name: 'Aravindh',
       age: 22,
       role: 'Brother',
-      avatar: '👩',
+      avatar: '👩‍⚕️',
       createdAt: new Date().toISOString()
     },
     {
@@ -72,19 +88,18 @@ const Profile = () => {
     
   ];
 
-  // Load profiles from localStorage on component mount
+  // Load profiles from localStorage on mount
   useEffect(() => {
     const savedProfiles = localStorage.getItem('familyProfiles');
     if (savedProfiles) {
       setProfiles(JSON.parse(savedProfiles));
     } else {
-      // Set sample profiles if none exist
       setProfiles(sampleProfiles);
       localStorage.setItem('familyProfiles', JSON.stringify(sampleProfiles));
     }
   }, []);
 
-  // Save profiles to localStorage whenever profiles change
+  // Save profiles to localStorage when they change
   useEffect(() => {
     if (profiles.length > 0) {
       localStorage.setItem('familyProfiles', JSON.stringify(profiles));
@@ -93,8 +108,8 @@ const Profile = () => {
 
   const handleCreateProfile = (e) => {
     e.preventDefault();
-    
-    if (!formData.name || !formData.age || !formData.role) {
+
+    if (!formData.name || !formData.age || !formData.gender || !formData.role || !formData.bloodGroup || !formData.contact) {
       alert('Please fill in all required fields');
       return;
     }
@@ -103,24 +118,34 @@ const Profile = () => {
       id: editingProfile ? editingProfile.id : Date.now().toString(),
       name: formData.name,
       age: parseInt(formData.age),
+      gender: formData.gender,
       role: formData.role,
       avatar: formData.avatar || defaultAvatars[formData.role] || '👤',
+      weight: formData.weight,
+      height: formData.height,
+      bloodGroup: formData.bloodGroup,
+      allergies: formData.allergies,
+      medicalConditions: formData.medicalConditions,
+      contact: formData.contact,
+      address: formData.address,
       createdAt: editingProfile ? editingProfile.createdAt : new Date().toISOString()
     };
 
     if (editingProfile) {
-      // Update existing profile
-      setProfiles(profiles.map(profile => 
+      setProfiles(profiles.map(profile =>
         profile.id === editingProfile.id ? profileData : profile
       ));
     } else {
-      // Add new profile
       setProfiles([...profiles, profileData]);
     }
 
     setShowModal(false);
     setEditingProfile(null);
-    setFormData({ name: '', age: '', role: '', avatar: '' });
+    setFormData({
+      name: '', age: '', gender: '', role: '', avatar: '',
+      weight: '', height: '', bloodGroup: '', allergies: '',
+      medicalConditions: '', contact: '', address: ''
+    });
   };
 
   const handleDeleteProfile = (profileId) => {
@@ -134,23 +159,33 @@ const Profile = () => {
     setFormData({
       name: profile.name,
       age: profile.age.toString(),
+      gender: profile.gender,
       role: profile.role,
-      avatar: profile.avatar
+      avatar: profile.avatar,
+      weight: profile.weight,
+      height: profile.height,
+      bloodGroup: profile.bloodGroup,
+      allergies: profile.allergies,
+      medicalConditions: profile.medicalConditions,
+      contact: profile.contact,
+      address: profile.address
     });
     setShowModal(true);
   };
 
   const handleSelectProfile = (profile) => {
     localStorage.setItem('selectedProfile', JSON.stringify(profile));
-    console.log('Profile selected:', profile);
-    // Change this to your chatbot route
-    router.push('/GS'); 
+    router.push('/GS');
   };
 
   const closeModal = () => {
     setShowModal(false);
     setEditingProfile(null);
-    setFormData({ name: '', age: '', role: '', avatar: '' });
+    setFormData({
+      name: '', age: '', gender: '', role: '', avatar: '',
+      weight: '', height: '', bloodGroup: '', allergies: '',
+      medicalConditions: '', contact: '', address: ''
+    });
   };
 
   return (
@@ -165,33 +200,23 @@ const Profile = () => {
           {profiles.map((profile) => (
             <div key={profile.id} className={styles.profileCard}>
               <div className={styles.profileImageContainer}>
-                <div 
+                <div
                   className={styles.profileImage}
                   onClick={() => handleSelectProfile(profile)}
                 >
                   <span className={styles.avatar}>{profile.avatar}</span>
                 </div>
                 <div className={styles.profileActions}>
-                  <button 
+                  <button
                     className={styles.editBtn}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditProfile(profile);
-                    }}
+                    onClick={(e) => { e.stopPropagation(); handleEditProfile(profile); }}
                     title="Edit Profile"
-                  >
-                    ✏️
-                  </button>
-                  <button 
+                  >✏️</button>
+                  <button
                     className={styles.deleteBtn}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteProfile(profile.id);
-                    }}
+                    onClick={(e) => { e.stopPropagation(); handleDeleteProfile(profile.id); }}
                     title="Delete Profile"
-                  >
-                    🗑️
-                  </button>
+                  >🗑️</button>
                 </div>
               </div>
               <div className={styles.profileInfo}>
@@ -204,7 +229,7 @@ const Profile = () => {
           {/* Add Profile Card */}
           <div className={styles.profileCard}>
             <div className={styles.profileImageContainer}>
-              <div 
+              <div
                 className={`${styles.profileImage} ${styles.addProfileImage}`}
                 onClick={() => setShowModal(true)}
               >
@@ -219,82 +244,158 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Modal for Create/Edit Profile */}
+      {/* Modal */}
       {showModal && (
         <div className={styles.modalOverlay} onClick={closeModal}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>{editingProfile ? 'Edit Profile' : 'Add New Family Member'}</h2>
-              <button 
-                className={styles.closeBtn}
-                onClick={closeModal}
-              >
-                ×
-              </button>
+              <h2>{editingProfile ? 'Edit Profile' : 'Add New Patient'}</h2>
+              <button className={styles.closeBtn} onClick={closeModal}>×</button>
             </div>
 
             <form onSubmit={handleCreateProfile} className={styles.form}>
+              {/* Name */}
               <div className={styles.inputGroup}>
-                <label htmlFor="name">Full Name *</label>
+                <label>Full Name *</label>
                 <input
-                  id="name"
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  placeholder="Enter full name"
                   required
                 />
               </div>
 
+              {/* Age + Gender */}
               <div className={styles.inputRow}>
                 <div className={styles.inputGroup}>
-                  <label htmlFor="age">Age *</label>
+                  <label>Age *</label>
                   <input
-                    id="age"
-                    type="number"
-                    min="0"
-                    max="120"
+                    type="number" min="0" max="120"
                     value={formData.age}
                     onChange={(e) => setFormData({...formData, age: e.target.value})}
-                    placeholder="Age"
                     required
                   />
                 </div>
-
                 <div className={styles.inputGroup}>
-                  <label htmlFor="role">Family Role *</label>
+                  <label>Gender *</label>
                   <select
-                    id="role"
-                    value={formData.role}
-                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                    value={formData.gender}
+                    onChange={(e) => setFormData({...formData, gender: e.target.value})}
                     required
                   >
-                    <option value="">Select role</option>
-                    {familyRoles.map(role => (
-                      <option key={role} value={role}>{role}</option>
-                    ))}
+                    <option value="">Select</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
               </div>
 
+              {/* Role */}
               <div className={styles.inputGroup}>
-                <label htmlFor="avatar">Avatar (Optional)</label>
+                <label>Family Role *</label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({...formData, role: e.target.value})}
+                  required
+                >
+                  <option value="">Select</option>
+                  {familyRoles.map(role => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Weight + Height */}
+              <div className={styles.inputRow}>
+                <div className={styles.inputGroup}>
+                  <label>Weight (kg)</label>
+                  <input
+                    type="number" min="1" max="300"
+                    value={formData.weight}
+                    onChange={(e) => setFormData({...formData, weight: e.target.value})}
+                  />
+                </div>
+                <div className={styles.inputGroup}>
+                  <label>Height (cm)</label>
+                  <input
+                    type="number" min="30" max="250"
+                    value={formData.height}
+                    onChange={(e) => setFormData({...formData, height: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              {/* Blood Group */}
+              <div className={styles.inputGroup}>
+                <label>Blood Group *</label>
+                <select
+                  value={formData.bloodGroup}
+                  onChange={(e) => setFormData({...formData, bloodGroup: e.target.value})}
+                  required
+                >
+                  <option value="">Select</option>
+                  {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (
+                    <option key={bg} value={bg}>{bg}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Allergies */}
+              <div className={styles.inputGroup}>
+                <label>Allergies</label>
                 <input
-                  id="avatar"
+                  type="text"
+                  value={formData.allergies}
+                  onChange={(e) => setFormData({...formData, allergies: e.target.value})}
+                  placeholder="e.g. Penicillin, Dust"
+                />
+              </div>
+
+              {/* Medical Conditions */}
+              <div className={styles.inputGroup}>
+                <label>Medical Conditions</label>
+                <input
+                  type="text"
+                  value={formData.medicalConditions}
+                  onChange={(e) => setFormData({...formData, medicalConditions: e.target.value})}
+                  placeholder="e.g. Diabetes"
+                />
+              </div>
+
+              {/* Contact */}
+              <div className={styles.inputGroup}>
+                <label>Contact Number *</label>
+                <input
+                  type="tel"
+                  value={formData.contact}
+                  onChange={(e) => setFormData({...formData, contact: e.target.value})}
+                  required
+                />
+              </div>
+
+              {/* Address */}
+              <div className={styles.inputGroup}>
+                <label>Address</label>
+                <textarea
+                  value={formData.address}
+                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                />
+              </div>
+
+              {/* Avatar */}
+              <div className={styles.inputGroup}>
+                <label>Avatar (Optional)</label>
+                <input
                   type="text"
                   value={formData.avatar}
                   onChange={(e) => setFormData({...formData, avatar: e.target.value})}
-                  placeholder="Enter emoji or leave blank for default"
+                  placeholder="Enter emoji or leave blank"
                 />
-                <small className={styles.helpText}>
-                  Leave empty to use default avatar for the selected role
-                </small>
               </div>
 
               <div className={styles.buttonGroup}>
-                <button type="button" onClick={closeModal} className={styles.cancelBtn}>
-                  Cancel
-                </button>
+                <button type="button" onClick={closeModal} className={styles.cancelBtn}>Cancel</button>
                 <button type="submit" className={styles.saveBtn}>
                   {editingProfile ? 'Update Profile' : 'Create Profile'}
                 </button>
@@ -308,3 +409,4 @@ const Profile = () => {
 };
 
 export default Profile;
+
