@@ -1,24 +1,125 @@
 /* Full Page Styling */
-.chat-container {
+:root{
+  --accent:#007bff;
+  --muted:#666;
+  --bg:#fff;
+  --chat-width: 600px;
+  --avatar-size: 160px; /* reduced from 200 */
+  --chat-height: 350px; 
+  
+}
+
+/* reset for the app navbar area */
+.app-navbar {
+  z-index: 1100;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+}
+
+/* nav left / right layout */
+.nav-left,
+.nav-right {
+  display:flex;
+  align-items:center;
+  gap:0.75rem;
+}
+
+.menu-toggle {
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* profile image in navbar */
+.profile-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Sidebar */
+.sidebar.open {
+  position: fixed;
+  left: 0;
+  top: 60px;
+  bottom: 0;
+  width: 240px;
+  background: #fff;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.06);
+  padding: 12px;
+  z-index: 1050;
+  overflow-y: auto;
+  border-right: 1px solid #eee;
+}
+
+.sidebar-title {
+  margin: 0 0 10px 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li{
+  margin-bottom:8px;
+}
+
+.sidebar-menu a {
+  color: #333;
+  text-decoration: none;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:500;
+}
+
+.menu-icon img {
+  width: 20px;
+  height: 20px;
+  display:inline-block;
+}
+
+/* MAIN LAYOUT FIXES
+   - Constrain main-content to viewport height
+   - Ensure avatar stays visible
+*/
+.main-content {
+  margin-top: 80px; /* below navbar */
+  padding-right: 280px; /* space for chat history sidebar */
+  height: calc(100vh - 80px);
+  background: var(--bg);
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: #ffffff;
   padding-left: 20px;
-  padding-top: 20px;
+  padding-bottom: 40px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* Avatar wrapper: circle, border, clip children */
+/* size now uses --avatar-size (reduced) */
 .avatar-wrapper {
   position: relative;
-  width: 200px;        /* same size you use in JSX */
-  height: 200px;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
   border-radius: 50%;
-  overflow: hidden;    /* clip gif to circle */
+  overflow: hidden;
   display: inline-block;
   box-sizing: border-box;
-  border: 3px solid #000; /* THE black ring around the avatar */
-  background: #000;        /* optional: fills any tiny gaps when loading */
+  border: 3px solid #000;
+  background: #000;
+  margin-bottom: 14px;
+  flex: 0 0 auto; /* keep avatar from flexing */
 }
 
 /* base avatar (static) — fill the wrapper, no border here */
@@ -27,51 +128,62 @@
   height: 100% !important;
   object-fit: cover;
   display: block;
-  border-radius: 0; /* wrapper already handles rounding */
-  border: 0;        /* remove image-level border so ring is single and clean */
+  border-radius: 0;
+  border: 0;
 }
 
 /* gif overlay sits on top and will be clipped by overflow:hidden */
 .avatar-wrapper .gif-overlay {
   position: absolute;
-  inset: 0;               /* top:0;right:0;bottom:0;left:0 */
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   pointer-events: none;
   z-index: 2;
-  border-radius: 0;       /* wrapper handles rounding */
+  border-radius: 0;
   transition: opacity 180ms ease-in-out;
   opacity: 1;
 }
 
-/* optional: when not speaking hide overlay smoothly */
 .avatar-wrapper .gif-overlay.hidden {
   opacity: 0;
   visibility: hidden;
 }
 
-/* Chat Box */
+/* Chat Box
+   Static size using --chat-height so it doesn't collapse to content.
+   Still responsive: max-height prevents overflow on short viewports.
+*/
 .chat-box {
-  width: 90%;
-  max-width: 500px;
-  background: rgb(255, 255, 255);
+  width: 100%;
+  max-width: var(--chat-width);
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
-  height: 300px;
+  /* fixed static size for nicer layout */
+  height: var(--chat-height);
+  flex: 0 0 var(--chat-height);
+  min-height: 0;
+  /* keep it within viewport if screen is small:
+     viewport minus navbar and avatar and small margin */
+  max-height: calc(100vh - 80px - var(--avatar-size) - 40px);
   overflow: hidden;
+  margin-bottom: 24px;
 }
 
-/* Chat Messages */
+/* Chat Messages
+   Scrolls internally */
 .messages {
-  flex-grow: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 15px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-sizing: border-box;
 }
 
 /* Chat Bubbles */
@@ -103,6 +215,8 @@
   padding: 10px;
   border-top: 1px solid #ccc;
   background: white;
+  align-items:center;
+  gap: 8px;
 }
 
 .chat-input {
@@ -119,27 +233,38 @@
   color: white;
   border: none;
   padding: 12px 16px;
-  margin-left: 10px;
+  margin-left: 0;
   border-radius: 5px;
   cursor: pointer;
   font-size: 1rem;
+  min-width: 80px;
 }
 
 .send-btn:hover {
   background: #464646;
 }
 
-/* FAQ Section - Now on Right Side */
+.end-chat-btn {
+  min-width: 90px;
+  margin-left: 8px;
+}
+
+.new-chat-btn {
+  margin-left: 8px;
+}
+
+/* FAQ Section */
 .faq-section {
   position: fixed;
-  bottom: 20px; /* Lower on the screen */
-  right: 20px; /* Moves it to the right */
-  width: 220px; /* Keeps it small */
+  bottom: 20px;
+  right: 20px;
+  width: 220px;
   background: white;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   border-radius: 10px;
   padding: 10px;
   transition: all 0.3s ease;
+  z-index: 1050;
 }
 
 .faq-section.open {
@@ -147,7 +272,7 @@
 }
 
 .faq-toggle {
-  background: #007bff;
+  background: var(--accent);
   color: white;
   border: none;
   padding: 8px 12px;
@@ -180,6 +305,7 @@
 .faq-content li {
   margin-bottom: 6px;
 }
+
 /* Chat History Sidebar */
 .chat-history-sidebar {
   position: fixed;
@@ -225,10 +351,38 @@
   color: #007bff;
   border-radius: 4px;
   transition: background-color 0.2s ease;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
 .chat-history-btn:hover,
 .chat-history-btn:focus {
   background-color: #e6f0ff;
   outline: none;
+}
+
+.chat-history-btn .ended-flag {
+  color: #d00;
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.no-chats {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* small responsive tweaks */
+@media (max-width: 900px) {
+  .chat-history-sidebar {
+    width: 220px;
+  }
+  .main-content {
+    padding-right: 20px;
+  }
+  :root {
+    --chat-width: 90%;
+    --chat-height: calc(100vh - 80px - var(--avatar-size) - 60px);
+  }
 }
