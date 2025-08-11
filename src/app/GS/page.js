@@ -3,7 +3,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import Image from "next/image";
 import Link from "next/link";
-import { API_URL } from "./config";
 import { useState, useRef, useEffect } from "react";
 import {
   collection,
@@ -18,6 +17,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import "./gs.css";
+import { API_URL } from "./config";
 
 export default function ChatbotPage({ profileId }) {
   const chatRef = useRef(null);
@@ -274,118 +274,112 @@ export default function ChatbotPage({ profileId }) {
   const goToTopic = (id) => setChatId(id);
 
   // --- Send message ---
-const handleSend = async () => {
-  if (!input.trim()) return;
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    const userMsg = input.trim();
 
-  const userMsg = input.trim();
-  setMessages((prev) => [...prev, { sender: "user", text: userMsg }]);
-  setInput("");
+    // optimistic UI
+    setMessages((prev) => [...prev, { sender: "user", text: userMsg }]);
+    setInput("");
 
-  // Prepare conversation history
-  const history = (messages.concat({ sender: "user", text: userMsg }))
-    .map((m) => `${m.sender}: ${m.text}`)
-    .join("\n");
+    const history = (messages.concat({ sender: "user", text: userMsg }))
+      .map((m) => `${m.sender}: ${m.text}`)
+      .join("\n");
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-  let processingDocRef = null;
+    // We'll add a processing doc and then update it (no delete+add)
+    let processingDocRef = null;
 
-  try {
-    // Ensure chat session exists
-    let activeChatId = chatId;
-    if (!activeChatId) {
-      const chatsRef = collection(db, "profileData", userProfileId, "chats");
-      const newChatRef = await addDoc(chatsRef, {
-        createdAt: serverTimestamp(),
-        ended: false,
-        title: `Chat on ${new Date().toLocaleString()}`,
-      });
-      activeChatId = newChatRef.id;
-      setChatId(activeChatId);
-    }
-
-    const messagesRef = collection(db, "profileData", userProfileId, "chats", activeChatId, "messages");
-
-    // Save user message
-    await addDoc(messagesRef, {
-      sender: "user",
-      text: userMsg,
-      createdAt: serverTimestamp(),
-    });
-
-    // Add "Processing..." placeholder
-    processingDocRef = await addDoc(messagesRef, {
-      sender: "bot",
-      text: "⏳ Processing...",
-      createdAt: serverTimestamp(),
-    });
-
-    // Send to API (now using API_URL constant)
-    const response = await fetch(`${API_URL}/alpha_bot80`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ request: userMsg, history }),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-    if (!response.ok) throw new Error("API error");
-
-    const data = await response.json();
-    const answer = data.answer ?? "⚠️ Could not generate an answer.";
-
-    // Save bot's response
-    await addDoc(messagesRef, {
-      sender: "bot",
-      text: answer,
-      createdAt: serverTimestamp(),
-    });
-
-    // Remove "Processing..." placeholder
-    if (processingDocRef) {
-      try {
-        await deleteDoc(processingDocRef);
-      } catch (delErr) {
-        console.error("Failed to delete processing placeholder:", delErr);
-      }
-    }
-
-    // Speak bot's answer
-    speakText(answer);
-
-  } catch (error) {
-    clearTimeout(timeoutId);
-    console.error("handleSend error:", error);
-
-    if (processingDocRef) {
-      try {
-        await deleteDoc(processingDocRef);
-      } catch (delErr) {
-        console.error("Failed to delete processing placeholder on error:", delErr);
-      }
-    }
-
-    // Save error in DB or UI
     try {
-      if (chatId) {
-        const messagesRefErr = collection(db, "profileData", userProfileId, "chats", chatId, "messages");
-        await addDoc(messagesRefErr, {
-          sender: "bot",
-          text: "⚠️ An error occurred. Try again!",
+      let activeChatId = chatId;
+      if (!activeChatId) {
+        const chatsRef = collection(db, "profileData", userProfileId, "chats");
+        const newChatRef = await addDoc(chatsRef, {
+          createdAt: serverTimestamp(),
+          ended: false,
+          title: `Chat on ${new Date().toLocaleString()}`,
+        });
+        activeChatId = newChatRef.id;
+        setChatId(activeChatId);
+      }
+
+      const messagesRef = collection(db, "profileData", userProfileId, "chats", activeChatId, "messages");
+
+      // save user message to Firestore
+      await addDoc(messagesRef, {
+        sender: "user",
+        text: userMsg,
+        createdAt: serverTimestamp(),
+      });
+
+      // add processing doc
+      processingDocRef = await addDoc(messagesRef, {
+        sender: "bot",
+        text: "⏳ Processing...",
+        processing: true,
+        createdAt: serverTimestamp(),
+      });
+
+      // call LLM/API
+      const response = await fetch(API_URL+"/alpha_bot80", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ request: userMsg, history }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+      if (!response.ok) throw new Error("API error");
+
+      const data = await response.json();
+      const answer = data.answer ?? "Sorry, I couldn't generate an answer.";
+
+      // update the processing doc with the real answer
+      if (processingDocRef) {
+        await updateDoc(processingDocRef, {
+          text: answer,
+          processing: false,
           createdAt: serverTimestamp(),
         });
       } else {
-        setMessages((prev) => [...prev, { sender: "bot", text: "⚠️ An error occurred. Try again!" }]);
+        await addDoc(messagesRef, {
+          sender: "bot",
+          text: answer,
+          createdAt: serverTimestamp(),
+        });
       }
-    } catch (saveErr) {
-      console.error("error saving error message:", saveErr);
+
+      speakText(answer);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.error("handleSend error:", error);
+
+      try {
+        if (processingDocRef) {
+          await updateDoc(processingDocRef, {
+            text: "⚠️ An error occurred. Try again!",
+            processing: false,
+            createdAt: serverTimestamp(),
+          });
+        } else if (chatId) {
+          const messagesRefErr = collection(db, "profileData", userProfileId, "chats", chatId, "messages");
+          await addDoc(messagesRefErr, {
+            sender: "bot",
+            text: "⚠️ An error occurred. Try again!",
+            createdAt: serverTimestamp(),
+          });
+        } else {
+          setMessages((prev) => [...prev, { sender: "bot", text: "⚠️ An error occurred. Try again!" }]);
+        }
+      } catch (saveErr) {
+        console.error("error saving error message:", saveErr);
+      }
+
+      speakText("An error occurred. Try again!");
     }
-
-    speakText("An error occurred. Try again!");
-  }
-};
-
+  };
 
   return (
     <>
