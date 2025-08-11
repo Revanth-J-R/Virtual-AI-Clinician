@@ -196,7 +196,10 @@ export default function ChatbotPage({ profileId }) {
         fadeTimeoutRef.current = null;
       }
       setIsSpeaking(true);
-      setGifKey((k) => k + 1);
+      setGifKey((k) => k + 1
+    
+    
+    );
     };
     utter.onend = () => {
       if (fadeTimeoutRef.current) {
@@ -321,7 +324,7 @@ export default function ChatbotPage({ profileId }) {
 
       processingDocRef = await addDoc(messagesRef, {
         sender: "bot",
-        text: "⏳ Processing...",
+        text: "Processing...",
         createdAt: serverTimestamp(),
       });
 
