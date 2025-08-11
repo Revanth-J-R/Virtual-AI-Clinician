@@ -84,14 +84,8 @@ html, body, #__next {
   min-height: calc(100vh - 80px);
   background: var(--bg);
   box-sizing: border-box;
-  /* no overflow hidden here — page scrolls normally for main content,
-     but overall page scroll is disabled above per your instruction */
 }
 
-/* --- CHATBOT (fixed center) ---
-   Changed from bottom-right fixed to true center fixed
-   so avatar + chatbox are always positioned at the middle of the screen
-*/
 .chatbot-container {
   position: fixed;
   top: 50%;
@@ -102,9 +96,8 @@ html, body, #__next {
   flex-direction: column;
   align-items: center;
   gap: 12px;
+  width: 690px;
   pointer-events: auto;
-  /* prevent chatbot from overlapping history on very wide screens slightly */
-  max-width: calc(100vw - var(--history-width) - (var(--gutter) * 3));
 }
 
 /* Avatar wrapper */
@@ -152,15 +145,15 @@ html, body, #__next {
 /* Chat Box (static) */
 .chat-box {
   width: 100%;
-  max-width: var(--chat-width);
+  max-width: 2000px;
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   display: flex;
   flex-direction: column;
-  height: var(--chat-height);
+  height: 0px;
   flex: 0 0 var(--chat-height);
   min-height: 0;
-  max-height: calc(100vh - 40px);
+  max-height: calc(160vh - 50px);
   overflow: hidden;
   background: rgba(255,255,255,0.98);
 }
@@ -176,8 +169,6 @@ html, body, #__next {
   gap: 10px;
   box-sizing: border-box;
 }
-
-/* bubbles */
 .message {
   max-width: 75%;
   padding: 10px 14px;
@@ -301,7 +292,7 @@ html, body, #__next {
 .chat-history-sidebar h5 {
   position: sticky;
   top: -20;                       /* stick to top of the panel *          /* keep spacing below header */
-  padding: 10px 10px;               /* comfortable hit area */
+  padding: 15px 10px;               /* comfortable hit area */
   font-weight: 600;
   color: #333;
   background: rgba(255,255,255,0.95); /* same as panel so it doesn't show content under it */
@@ -327,19 +318,19 @@ html, body, #__next {
 
 /* FAQ (kept relative/flow by default) but we place it near history visually with fixed position so it remains visible */
 .faq-section {
-  position: fixed; /* changed from relative so FAQ stays visible and doesn't cause page scroll */
-  right: calc(var(--history-width) + (var(--gutter) * 1.2));
-  top: calc(50% + 160px);
+  position: relative; /* changed from relative so FAQ stays visible and doesn't cause page scroll */
+  right: -600px;
+  top: -20px;
   transform: translateY(-50%);
   width: 100%;
-  max-width: 320px;
+  max-width: 130px;
   background: rgba(255,255,255,0.95);
   border-radius: 10px;
   padding: 10px;
-  margin-top: 0;
   box-shadow: 0 6px 18px rgba(0,0,0,0.06);
   z-index: 1180;
 }
+
 
 .faq-toggle {
   background: var(--accent);
