@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import Image from "next/image";
@@ -17,48 +17,38 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
-import "./gs.css"; // updated CSS (paste the CSS below into this file)
+import "./gs.css";
 
 export default function ChatbotPage({ profileId }) {
   const chatRef = useRef(null);
 
-  // If you pass a profileId prop use it, otherwise use demo id
   const userProfileId = profileId || "demoUser123";
 
-  // Chat messages & input
+  // Chat state
   const [messages, setMessages] = useState([
     { sender: "bot", text: "Hello! I'm Alpha, your AI assistant. How can I help?" },
   ]);
   const [input, setInput] = useState("");
+  const [chatTopics, setChatTopics] = useState([]);
+  const [chatId, setChatId] = useState(null);
+  const activeChatEnded = !!chatTopics.find((c) => c.id === chatId && c.ended);
 
-  // Sidebar, FAQ toggles
+  // Sidebar/FAQ toggles
   const [faqOpen, setFaqOpen] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-  // Chat history in sidebar (populated from Firestore). Start empty — listener will fill it.
-  const [chatTopics, setChatTopics] = useState([]);
-
-  // active chatId for current conversation
-  const [chatId, setChatId] = useState(null);
-
-  // whether the active chat is ended (used to disable input / end button)
-  const activeChatEnded = !!chatTopics.find((c) => c.id === chatId && c.ended);
-
-  // --- TTS state ---
+  // TTS states
   const [voices, setVoices] = useState([]);
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [gifKey, setGifKey] = useState(0); // to re-render gif when speaking
+  const [gifKey, setGifKey] = useState(0);
   const synthRef = useRef(typeof window !== "undefined" ? window.speechSynthesis : null);
   const currentUtterRef = useRef(null);
   const fadeTimeoutRef = useRef(null);
 
-  // Control this value to change how long the avatar GIF stays visible after speech ends (milliseconds)
-  const GIF_FADE_MS = 1; // change to 0 / 200 / 500 etc.
+  const GIF_FADE_MS = 1;
 
-  // ------------------------------
-  // Firestore: load/create an active chat and listen to chat list (history)
-  // ------------------------------
+  // --- Firestore: load/create chats and listen to chat list (history) ---
   useEffect(() => {
     let unsubHistory = null;
     let isMounted = true;
@@ -66,10 +56,8 @@ export default function ChatbotPage({ profileId }) {
     async function setupChats() {
       try {
         const chatsRef = collection(db, "profileData", userProfileId, "chats");
-
         // Fetch chats to find last active chat
         const chatsSnap = await getDocs(query(chatsRef, orderBy("createdAt", "desc")));
-
         let currentChatId = null;
         let chatWasEnded = false;
 
@@ -97,7 +85,7 @@ export default function ChatbotPage({ profileId }) {
 
         if (isMounted) setChatId(currentChatId);
 
-        // Listen to all chats (history) so the sidebar updates in real-time
+        // Listen to all chats
         unsubHistory = onSnapshot(query(chatsRef, orderBy("createdAt", "desc")), (snapshot) => {
           if (!isMounted) return;
           setChatTopics(
@@ -132,9 +120,7 @@ export default function ChatbotPage({ profileId }) {
     };
   }, [userProfileId]);
 
-  // ------------------------------
-  // When chatId changes, listen to messages for that chat
-  // ------------------------------
+  // --- When chatId changes, listen to messages for that chat ---
   useEffect(() => {
     if (!chatId) return;
     const messagesRef = collection(db, "profileData", userProfileId, "chats", chatId, "messages");
@@ -178,25 +164,19 @@ export default function ChatbotPage({ profileId }) {
     };
   }, []);
 
-  // speakText helper
+  // TTS helpers
   const speakText = (text, opts = {}) => {
     if (isMuted) return;
     if (!synthRef.current || !text) return;
-
-    // cancel any ongoing speech
     if (synthRef.current.speaking) {
       try { synthRef.current.cancel(); } catch (e) {}
     }
-
-    // clear any pending fade timeout so gif state is consistent
     if (fadeTimeoutRef.current) {
       clearTimeout(fadeTimeoutRef.current);
       fadeTimeoutRef.current = null;
     }
-
     const utter = new SpeechSynthesisUtterance(text);
     currentUtterRef.current = utter;
-
     const female = voices.find((v) =>
       /female|zira|google uk english female/i.test(v.name)
     );
@@ -206,14 +186,11 @@ export default function ChatbotPage({ profileId }) {
     } else if (female) {
       utter.voice = female;
     }
-
     utter.lang = opts.lang || "en-US";
     utter.rate = opts.rate ?? 1;
     utter.pitch = opts.pitch ?? 1;
     utter.volume = opts.volume ?? 1;
-
     utter.onstart = () => {
-      // When speech starts, show the GIF immediately
       if (fadeTimeoutRef.current) {
         clearTimeout(fadeTimeoutRef.current);
         fadeTimeoutRef.current = null;
@@ -221,8 +198,6 @@ export default function ChatbotPage({ profileId }) {
       setIsSpeaking(true);
       setGifKey((k) => k + 1);
     };
-
-    // When speech ends, keep the GIF visible for GIF_FADE_MS milliseconds, then hide it
     utter.onend = () => {
       if (fadeTimeoutRef.current) {
         clearTimeout(fadeTimeoutRef.current);
@@ -233,7 +208,6 @@ export default function ChatbotPage({ profileId }) {
         fadeTimeoutRef.current = null;
       }, GIF_FADE_MS);
     };
-
     utter.onerror = () => {
       if (fadeTimeoutRef.current) {
         clearTimeout(fadeTimeoutRef.current);
@@ -244,7 +218,6 @@ export default function ChatbotPage({ profileId }) {
         fadeTimeoutRef.current = null;
       }, GIF_FADE_MS);
     };
-
     try {
       synthRef.current.speak(utter);
     } catch (err) {
@@ -263,7 +236,6 @@ export default function ChatbotPage({ profileId }) {
     try {
       synthRef.current.cancel();
     } catch (e) {}
-    // clear any fade timeout and hide the gif immediately
     if (fadeTimeoutRef.current) {
       clearTimeout(fadeTimeoutRef.current);
       fadeTimeoutRef.current = null;
@@ -279,9 +251,7 @@ export default function ChatbotPage({ profileId }) {
     });
   };
 
-  // ------------------------------
-  // Firestore helpers used by UI
-  // ------------------------------
+  // --- End chat logic ---
   const handleEndChat = async () => {
     if (!chatId) return;
     try {
@@ -292,6 +262,7 @@ export default function ChatbotPage({ profileId }) {
     }
   };
 
+  // --- Start new chat ---
   const handleNewChat = async () => {
     try {
       const chatsRef = collection(db, "profileData", userProfileId, "chats");
@@ -308,37 +279,27 @@ export default function ChatbotPage({ profileId }) {
   };
 
   const goToTopic = (id) => {
-    // set chatId — the messages listener effect will switch message stream
     setChatId(id);
   };
 
-  // ------------------------------
-  // Send message: local UI + Firestore saving + API call
-  // - No frame/slot-filling logic here (removed)
-  // - Processing placeholder is deleted when answer arrives
-  // ------------------------------
+  // --- Send message: Firestore saving + API call + TTS ---
   const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMsg = input.trim();
-
-    // Add locally for immediate UI responsiveness (real data comes from Firestore snapshot)
     setMessages((prev) => [...prev, { sender: "user", text: userMsg }]);
     setInput("");
 
-    // Build history text for the LLM request (we use local snapshot of messages + current message)
     const history = (messages.concat({ sender: "user", text: userMsg }))
       .map((m) => `${m.sender}: ${m.text}`)
       .join("\n");
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 seconds
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-    // Track processing doc so we can remove it when answer arrives
     let processingDocRef = null;
 
     try {
-      // Ensure there is an active chat; create if missing
       let activeChatId = chatId;
       if (!activeChatId) {
         const chatsRef = collection(db, "profileData", userProfileId, "chats");
@@ -351,7 +312,6 @@ export default function ChatbotPage({ profileId }) {
         setChatId(activeChatId);
       }
 
-      // Save user message to Firestore
       const messagesRef = collection(db, "profileData", userProfileId, "chats", activeChatId, "messages");
       await addDoc(messagesRef, {
         sender: "user",
@@ -359,14 +319,13 @@ export default function ChatbotPage({ profileId }) {
         createdAt: serverTimestamp(),
       });
 
-      // Add "Processing..." placeholder and keep its ref so we can delete it later
       processingDocRef = await addDoc(messagesRef, {
         sender: "bot",
         text: "⏳ Processing...",
         createdAt: serverTimestamp(),
       });
 
-      // Call remote API
+      // ---- CHANGE THIS URL TO YOUR AI API IF NEEDED ----
       const response = await fetch("https://1e1f-34-170-161-156.ngrok-free.app/alpha_bot80", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -380,14 +339,12 @@ export default function ChatbotPage({ profileId }) {
       const data = await response.json();
       const answer = data.answer ?? "Sorry, I couldn't generate an answer.";
 
-      // Save real bot answer to Firestore
       await addDoc(messagesRef, {
         sender: "bot",
         text: answer,
         createdAt: serverTimestamp(),
       });
 
-      // Delete the "Processing..." placeholder now that real answer is saved
       if (processingDocRef) {
         try {
           await deleteDoc(processingDocRef);
@@ -396,13 +353,10 @@ export default function ChatbotPage({ profileId }) {
         }
       }
 
-      // Speak the bot answer
       speakText(answer);
     } catch (error) {
       clearTimeout(timeoutId);
       console.error("handleSend error:", error);
-
-      // Remove processing placeholder if present
       if (processingDocRef) {
         try {
           await deleteDoc(processingDocRef);
@@ -410,8 +364,6 @@ export default function ChatbotPage({ profileId }) {
           console.error("Failed to delete processing placeholder on error:", delErr);
         }
       }
-
-      // Save error reply to Firestore if we have an active chat, otherwise show local error
       try {
         if (chatId) {
           const messagesRefErr = collection(db, "profileData", userProfileId, "chats", chatId, "messages");
@@ -426,7 +378,6 @@ export default function ChatbotPage({ profileId }) {
       } catch (saveErr) {
         console.error("error saving error message:", saveErr);
       }
-
       speakText("An error occurred. Try again!");
     }
   };
@@ -454,7 +405,6 @@ export default function ChatbotPage({ profileId }) {
           >
             {isMuted ? "🔇 Unmute" : "🔊 Mute"}
           </button>
-
           <Link href="/profile" aria-label="Go to profile">
             <img
               src="https://cdn-icons-png.flaticon.com/512/6522/6522516.png"
@@ -474,7 +424,7 @@ export default function ChatbotPage({ profileId }) {
           <ul className="sidebar-menu">
             <li>
               <Link href="/dashboard" aria-label="Go to Dashboard">
-                <span className="menu-icon" >
+                <span className="menu-icon">
                   <img src="/dashboard-2-48.png" width="20" height="20" alt="" />
                 </span>{" "}
                 Dashboard
@@ -482,7 +432,7 @@ export default function ChatbotPage({ profileId }) {
             </li>
             <li>
               <Link href="/settings" aria-label="Go to Settings">
-                <span className="menu-icon" >
+                <span className="menu-icon">
                   <img src="/gear-48.png" width="20" height="20" alt="" />
                 </span>{" "}
                 Settings
@@ -490,20 +440,15 @@ export default function ChatbotPage({ profileId }) {
             </li>
             <li>
               <Link href="/ai-doctor" aria-label="Go to AI Doctor">
-                <span className="menu-icon" >
-                  <img
-                    src="/appointment-reminders-48.png"
-                    width="20"
-                    height="20"
-                    alt=""
-                  />
+                <span className="menu-icon">
+                  <img src="/appointment-reminders-48.png" width="20" height="20" alt="" />
                 </span>{" "}
                 Appointments
               </Link>
             </li>
             <li>
               <Link href="/myhealth-tracker" aria-label="Go to MyHealth Tracker">
-                <span className="menu-icon" >
+                <span className="menu-icon">
                   <img src="/report-2-48.png" width="20" height="20" alt="" />
                 </span>{" "}
                 MyHealth Tracker
@@ -511,7 +456,7 @@ export default function ChatbotPage({ profileId }) {
             </li>
             <li>
               <Link href="/special-care" aria-label="Go to Special Care Hub">
-                <span className="menu-icon" >
+                <span className="menu-icon">
                   <img src="/baby-48.png" width="20" height="20" alt="" />
                 </span>{" "}
                 Special Care Hub
@@ -519,18 +464,15 @@ export default function ChatbotPage({ profileId }) {
             </li>
             <li>
               <Link href="/Sidebarpages/xray" aria-label="Go to AI X-Ray Analyzer">
-                <span className="menu-icon" >
+                <span className="menu-icon">
                   <img src="/xray-48.png" width="20" height="20" alt="" />
                 </span>{" "}
                 AI X-Ray Analyzer
               </Link>
             </li>
             <li>
-              <Link
-                href="/Sidebarpages/article"
-                aria-label="Go to Disease Prevention"
-              >
-                <span className="menu-icon" >
+              <Link href="/Sidebarpages/article" aria-label="Go to Disease Prevention">
+                <span className="menu-icon">
                   <img src="/virus.png" width="20" height="20" alt="" />
                 </span>{" "}
                 Disease Prevention
@@ -538,7 +480,7 @@ export default function ChatbotPage({ profileId }) {
             </li>
             <li>
               <Link href="/Sidebarpages/profile" aria-label="Go to Profile">
-                <span className="menu-icon" >
+                <span className="menu-icon">
                   <img src="/user-48.png" width="20" height="20" alt="" />
                 </span>{" "}
                 Profile
@@ -595,7 +537,7 @@ export default function ChatbotPage({ profileId }) {
               placeholder="Type your message..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSend()}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
               aria-label="Type your message"
               disabled={activeChatEnded}
             />
