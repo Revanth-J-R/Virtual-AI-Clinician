@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import Image from "next/image";
@@ -14,14 +14,12 @@ import {
   getDocs,
   updateDoc,
   doc,
-  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import "./gs.css";
 
 export default function ChatbotPage({ profileId }) {
   const chatRef = useRef(null);
-
   const userProfileId = profileId || "demoUser123";
 
   // Chat state
@@ -46,7 +44,8 @@ export default function ChatbotPage({ profileId }) {
   const currentUtterRef = useRef(null);
   const fadeTimeoutRef = useRef(null);
 
-  const GIF_FADE_MS = 1;
+  // small fade after speech stops
+  const GIF_FADE_MS = 250;
 
   // --- Firestore: load/create chats and listen to chat list (history) ---
   useEffect(() => {
@@ -56,7 +55,6 @@ export default function ChatbotPage({ profileId }) {
     async function setupChats() {
       try {
         const chatsRef = collection(db, "profileData", userProfileId, "chats");
-        // Fetch chats to find last active chat
         const chatsSnap = await getDocs(query(chatsRef, orderBy("createdAt", "desc")));
         let currentChatId = null;
         let chatWasEnded = false;
@@ -74,7 +72,6 @@ export default function ChatbotPage({ profileId }) {
         }
 
         if (chatWasEnded) {
-          // create a new chat doc
           const newChatRef = await addDoc(chatsRef, {
             createdAt: serverTimestamp(),
             ended: false,
@@ -85,7 +82,6 @@ export default function ChatbotPage({ profileId }) {
 
         if (isMounted) setChatId(currentChatId);
 
-        // Listen to all chats
         unsubHistory = onSnapshot(query(chatsRef, orderBy("createdAt", "desc")), (snapshot) => {
           if (!isMounted) return;
           setChatTopics(
@@ -143,22 +139,21 @@ export default function ChatbotPage({ profileId }) {
   // Scroll chat to bottom on new message
   useEffect(() => {
     if (chatRef.current) {
-      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+      setTimeout(() => {
+        chatRef.current.scrollTop = chatRef.current.scrollHeight;
+      }, 40);
     }
   }, [messages]);
 
   // Load available voices
   useEffect(() => {
     if (!synthRef.current) return;
-
     const loadVoices = () => {
       const v = synthRef.current.getVoices() || [];
       setVoices(v);
     };
-
     loadVoices();
     synthRef.current.onvoiceschanged = loadVoices;
-
     return () => {
       if (synthRef.current) synthRef.current.onvoiceschanged = null;
     };
@@ -233,9 +228,7 @@ export default function ChatbotPage({ profileId }) {
 
   const stopSpeaking = () => {
     if (!synthRef.current) return;
-    try {
-      synthRef.current.cancel();
-    } catch (e) {}
+    try { synthRef.current.cancel(); } catch (e) {}
     if (fadeTimeoutRef.current) {
       clearTimeout(fadeTimeoutRef.current);
       fadeTimeoutRef.current = null;
@@ -251,7 +244,7 @@ export default function ChatbotPage({ profileId }) {
     });
   };
 
-  // --- End chat logic ---
+  // --- End / New chat helpers ---
   const handleEndChat = async () => {
     if (!chatId) return;
     try {
@@ -262,7 +255,6 @@ export default function ChatbotPage({ profileId }) {
     }
   };
 
-  // --- Start new chat ---
   const handleNewChat = async () => {
     try {
       const chatsRef = collection(db, "profileData", userProfileId, "chats");
@@ -278,15 +270,14 @@ export default function ChatbotPage({ profileId }) {
     }
   };
 
-  const goToTopic = (id) => {
-    setChatId(id);
-  };
+  const goToTopic = (id) => setChatId(id);
 
-  // --- Send message: Firestore saving + API call + TTS ---
+  // --- Send message ---
   const handleSend = async () => {
     if (!input.trim()) return;
-
     const userMsg = input.trim();
+
+    // optimistic UI
     setMessages((prev) => [...prev, { sender: "user", text: userMsg }]);
     setInput("");
 
@@ -297,6 +288,7 @@ export default function ChatbotPage({ profileId }) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
+    // We'll add a processing doc and then update it (no delete+add)
     let processingDocRef = null;
 
     try {
@@ -313,19 +305,23 @@ export default function ChatbotPage({ profileId }) {
       }
 
       const messagesRef = collection(db, "profileData", userProfileId, "chats", activeChatId, "messages");
+
+      // save user message to Firestore
       await addDoc(messagesRef, {
         sender: "user",
         text: userMsg,
         createdAt: serverTimestamp(),
       });
 
+      // add processing doc
       processingDocRef = await addDoc(messagesRef, {
         sender: "bot",
         text: "⏳ Processing...",
+        processing: true,
         createdAt: serverTimestamp(),
       });
 
-      // ---- CHANGE THIS URL TO YOUR AI API IF NEEDED ----
+      // call LLM/API
       const response = await fetch("https://1e1f-34-170-161-156.ngrok-free.app/alpha_bot80", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -339,33 +335,34 @@ export default function ChatbotPage({ profileId }) {
       const data = await response.json();
       const answer = data.answer ?? "Sorry, I couldn't generate an answer.";
 
-      await addDoc(messagesRef, {
-        sender: "bot",
-        text: answer,
-        createdAt: serverTimestamp(),
-      });
-
+      // update the processing doc with the real answer
       if (processingDocRef) {
-        try {
-          await deleteDoc(processingDocRef);
-        } catch (delErr) {
-          console.error("Failed to delete processing placeholder:", delErr);
-        }
+        await updateDoc(processingDocRef, {
+          text: answer,
+          processing: false,
+          createdAt: serverTimestamp(),
+        });
+      } else {
+        await addDoc(messagesRef, {
+          sender: "bot",
+          text: answer,
+          createdAt: serverTimestamp(),
+        });
       }
 
       speakText(answer);
     } catch (error) {
       clearTimeout(timeoutId);
       console.error("handleSend error:", error);
-      if (processingDocRef) {
-        try {
-          await deleteDoc(processingDocRef);
-        } catch (delErr) {
-          console.error("Failed to delete processing placeholder on error:", delErr);
-        }
-      }
+
       try {
-        if (chatId) {
+        if (processingDocRef) {
+          await updateDoc(processingDocRef, {
+            text: "⚠️ An error occurred. Try again!",
+            processing: false,
+            createdAt: serverTimestamp(),
+          });
+        } else if (chatId) {
           const messagesRefErr = collection(db, "profileData", userProfileId, "chats", chatId, "messages");
           await addDoc(messagesRefErr, {
             sender: "bot",
@@ -378,6 +375,7 @@ export default function ChatbotPage({ profileId }) {
       } catch (saveErr) {
         console.error("error saving error message:", saveErr);
       }
+
       speakText("An error occurred. Try again!");
     }
   };
@@ -490,16 +488,20 @@ export default function ChatbotPage({ profileId }) {
         </div>
       )}
 
-      {/* Main Content */}
+      {/* Page Main Content (other page content can go here) */}
       <div className="main-content">
-        {/* AI Avatar */}
+        {/* This area is intentionally left for page content / background. */}
+      </div>
+
+      {/* Chatbot container (fixed center) */}
+      <div className="chatbot-container" aria-hidden={false}>
         <div className="ai-avatar">
           <div className="avatar-wrapper" aria-hidden={isSpeaking ? "false" : "true"}>
             <Image
               src="/doc.jpg"
               alt="AI Avatar"
-              width={200}
-              height={200}
+              width={160}
+              height={160}
               className="avatar-image"
             />
             {isSpeaking && (
@@ -507,15 +509,14 @@ export default function ChatbotPage({ profileId }) {
                 key={gifKey}
                 src="/doc.gif"
                 alt="AI Speaking Animation"
-                width={200}
-                height={200}
+                width={160}
+                height={160}
                 className="gif-overlay"
               />
             )}
           </div>
         </div>
 
-        {/* Chat Box */}
         <div className="chat-box">
           <div
             className="messages"
@@ -523,11 +524,19 @@ export default function ChatbotPage({ profileId }) {
             aria-live="polite"
             aria-relevant="additions"
           >
-            {messages.map((msg, index) => (
-              <div key={msg.id || index} className={`message ${msg.sender}`} role="article" aria-label={`${msg.sender} message`}>
-                {msg.text}
-              </div>
-            ))}
+            {messages.map((msg, index) => {
+              const isProcessing = !!msg.processing;
+              return (
+                <div
+                  key={msg.id || index}
+                  className={`message ${msg.sender} ${isProcessing ? "processing" : ""} ${msg.sender === "bot" && !isProcessing ? "updated" : ""}`}
+                  role="article"
+                  aria-label={`${msg.sender} message`}
+                >
+                  {msg.text}
+                </div>
+              );
+            })}
           </div>
 
           <div className="input-area">
@@ -556,7 +565,7 @@ export default function ChatbotPage({ profileId }) {
         </div>
       </div>
 
-      {/* Chat History Sidebar */}
+      {/* Chat History (fixed right) */}
       <aside className="chat-history-sidebar" aria-label="Chat history topics">
         <h5>Chat History</h5>
         <ul className="chat-history-list">
@@ -582,7 +591,7 @@ export default function ChatbotPage({ profileId }) {
         </ul>
       </aside>
 
-      {/* FAQ Section */}
+      {/* FAQ Section (fixed near history) */}
       <div className={`faq-section ${faqOpen ? "open" : ""}`}>
         <button
           className="faq-toggle"
