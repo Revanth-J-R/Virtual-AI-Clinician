@@ -1,10 +1,23 @@
-:root{
+:root{ 
   --accent:#007bff;
   --muted:#666;
   --bg:#fff;
   --chat-width: 800px;
   --avatar-size: 160px;
   --chat-height: 375px;
+  --history-width: 350px; /* new var for history width */
+  --gutter: 20px;
+}
+
+/* ---------------------------
+   NEW: prevent page vertical scroll
+   (you asked "ensure there is no scrolling down in the webpage")
+   If you later want page scroll again, remove these three lines.
+---------------------------- */
+html, body, #__next {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
 }
 
 /* Navbar */
@@ -71,20 +84,27 @@
   min-height: calc(100vh - 80px);
   background: var(--bg);
   box-sizing: border-box;
-  /* no overflow hidden here — page scrolls normally */
+  /* no overflow hidden here — page scrolls normally for main content,
+     but overall page scroll is disabled above per your instruction */
 }
 
-/* --- CHATBOT (fixed) --- */
+/* --- CHATBOT (fixed center) ---
+   Changed from bottom-right fixed to true center fixed
+   so avatar + chatbox are always positioned at the middle of the screen
+*/
 .chatbot-container {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 1200;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
   pointer-events: auto;
+  /* prevent chatbot from overlapping history on very wide screens slightly */
+  max-width: calc(100vw - var(--history-width) - (var(--gutter) * 3));
 }
 
 /* Avatar wrapper */
@@ -250,25 +270,45 @@
   border-radius: 8px;
 }
 
-/* --- HISTORY & FAQ now flow with page (not fixed) --- */
-
-/* Chat History Sidebar (relative) */
+/* --- HISTORY now fixed at right side (vertically centered) ---
+   Previously relative and at bottom; changed to fixed at right center.
+*/
 .chat-history-sidebar {
-  position: relative;
-  top: auto;
-  right: auto;
-  width: 100%;
-  max-width: 350px;
-  margin: 18px 0;
-  height: auto;
-  background: rgba(255,255,255,0.9);
+  position: fixed;              /* changed */
+  top: 50.4%;                     /* changed: vertical center */
+  right: var(--gutter);         /* changed: pinned to right with gutter */
+  transform: translateY(-50%);  /* changed: vertically center */
+  width: var(--history-width);  /* changed: fixed width via var */
+  max-height: calc(100vh - (var(--gutter) * 2));
+  overflow-y: auto;
+  margin: 0;                    /* removed bottom margin from old layout */
+  height:556px;
+  background: rgba(255,255,255,0.95);
   border-left: none;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
   padding: 12px;
   box-sizing: border-box;
+  z-index: 1190;
 }
 
-.chat-history-sidebar h5 { margin-top: 0; margin-bottom: 12px; font-weight:600; color:#333; }
+/* Keep the sidebar header visible while the list scrolls */
+.chat-history-sidebar {
+  /* keep everything else as-is... */
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-history-sidebar h5 {
+  position: sticky;
+  top: -20;                       /* stick to top of the panel *          /* keep spacing below header */
+  padding: 10px 10px;               /* comfortable hit area */
+  font-weight: 600;
+  color: #333;
+  background: rgba(255,255,255,0.95); /* same as panel so it doesn't show content under it */
+  z-index: 4;                   /* above list items */
+  border-bottom: 1px solid rgba(0,0,0,0.04); /* subtle separator */
+}
+
 .chat-history-list { list-style:none; padding:0; margin:0; }
 .chat-history-list li { margin-bottom:8px; }
 .chat-history-btn {
@@ -285,18 +325,20 @@
 }
 .chat-history-btn:hover { background:#eef6ff; }
 
-/* FAQ (relative in flow) */
+/* FAQ (kept relative/flow by default) but we place it near history visually with fixed position so it remains visible */
 .faq-section {
-  position: relative;
-  right: auto;
-  bottom: auto;
+  position: fixed; /* changed from relative so FAQ stays visible and doesn't cause page scroll */
+  right: calc(var(--history-width) + (var(--gutter) * 1.2));
+  top: calc(50% + 160px);
+  transform: translateY(-50%);
   width: 100%;
   max-width: 320px;
   background: rgba(255,255,255,0.95);
   border-radius: 10px;
   padding: 10px;
-  margin-top: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  margin-top: 0;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  z-index: 1180;
 }
 
 .faq-toggle {
@@ -317,14 +359,37 @@
   :root {
     --chat-width: 92vw;
     --chat-height: calc(50vh);
+    --history-width: 92vw;
   }
+
+  /* on small screens, convert fixed elements into stacked layout that fits */
   .chatbot-container {
     left: 50%;
     transform: translateX(-50%);
-    right: auto;
-    bottom: 12px;
+    top: 16%;
+    bottom: auto;
   }
-  .chat-history-sidebar, .faq-section {
-    max-width: 100%;
+
+  .chat-history-sidebar {
+    position: fixed;
+    top: calc(50% + 38%);
+    right: 50%;
+    transform: translateX(50%) translateY(-50%);
+    width: var(--history-width);
+    max-height: 40vh;
+  }
+
+  .faq-section {
+    position: fixed;
+    bottom: 12px;
+    right: 12px;
+    top: auto;
+    transform: none;
+  }
+
+  /* On narrow screens allow page-like scrolling within these panels */
+  html, body, #__next {
+    overflow: auto;
+    height: auto;
   }
 }
