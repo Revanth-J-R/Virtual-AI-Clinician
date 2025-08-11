@@ -175,9 +175,9 @@ const Profile = () => {
     setShowModal(true);
   };
 
+  // Store only the profile id for easy access throughout the app
   const handleSelectProfile = (profile) => {
-    // Store selected profile in localStorage for the session
-    localStorage.setItem('selectedProfile', JSON.stringify(profile));
+    localStorage.setItem('selectedProfileId', profile.id);
     router.push('/GS');
   };
 

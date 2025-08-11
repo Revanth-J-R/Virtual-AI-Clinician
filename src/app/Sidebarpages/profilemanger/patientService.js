@@ -1,14 +1,22 @@
 import { db } from '../../firebaseConfig';
-import { doc, setDoc, collection, addDoc, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
+import { 
+  doc, 
+  setDoc, 
+  collection, 
+  addDoc, 
+  getDocs, 
+  deleteDoc, 
+  updateDoc,
+  serverTimestamp
+} from 'firebase/firestore';
 
 // Save patient profile to Firestore
 export const savePatientProfile = async (profileData) => {
   try {
-    // Use addDoc to auto-generate document ID, or setDoc with custom ID
     const docRef = await addDoc(collection(db, 'profileData'), {
       ...profileData,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     });
     console.log('Profile saved successfully with ID:', docRef.id);
     return docRef.id;
@@ -24,7 +32,7 @@ export const updatePatientProfile = async (profileId, profileData) => {
     const profileRef = doc(db, 'profileData', profileId);
     await updateDoc(profileRef, {
       ...profileData,
-      updatedAt: new Date()
+      updatedAt: serverTimestamp()
     });
     console.log('Profile updated successfully!');
   } catch (error) {
@@ -38,10 +46,10 @@ export const getAllPatientProfiles = async () => {
   try {
     const querySnapshot = await getDocs(collection(db, 'profileData'));
     const profiles = [];
-    querySnapshot.forEach((doc) => {
+    querySnapshot.forEach((docSnap) => {
       profiles.push({
-        id: doc.id,
-        ...doc.data()
+        id: docSnap.id,
+        ...docSnap.data()
       });
     });
     return profiles;
@@ -67,8 +75,8 @@ export const savePatientProfileWithId = async (profileId, profileData) => {
   try {
     await setDoc(doc(db, 'profileData', profileId), {
       ...profileData,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     }, { merge: true });
     console.log('Profile saved successfully with custom ID!');
   } catch (error) {

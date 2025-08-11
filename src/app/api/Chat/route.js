@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/app/firebaseConfig";
 import {
   collection,
-  addDoc,
+  doc,
+  setDoc,
   getDocs,
   query,
   orderBy,
@@ -10,32 +11,38 @@ import {
 } from "firebase/firestore";
 
 /**
- * POST → Save a message into Firestore
+ * POST → Save a message into Firestore (new structure, upper-case "Chats"/"Messages")
+ * Expects: { profileId, chatId, ChatBy, Message }
  */
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { profileId, chatId, sender, text } = body;
+    const { profileId, chatId, ChatBy, Message } = body;
 
-    if (!profileId || !chatId || !sender || !text) {
+    if (!profileId || !chatId || !ChatBy || !Message) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    const messagesCol = collection(
+    // Use formatted time as doc ID
+    const now = new Date();
+    const msgTime = now.toLocaleTimeString("en-GB", { hour: '2-digit', minute: '2-digit' });
+
+    const messageRef = doc(
       db,
       "profileData",
       profileId,
-      "chats",
+      "Chats",
       chatId,
-      "messages"
+      "Messages",
+      msgTime
     );
 
-    await addDoc(messagesCol, {
-      sender,
-      text,
+    await setDoc(messageRef, {
+      ChatBy,
+      Message,
       timestamp: serverTimestamp(),
     });
 
@@ -51,7 +58,8 @@ export async function POST(req) {
 
 /**
  * GET → Fetch all messages for a given chat
- * Usage: /api/chat?profileId=abc123&chatId=xyz789
+ * Usage: /api/Chat?profileId=abc123&chatId=xyz789
+ * Uses new structure with "Chats"/"Messages"
  */
 export async function GET(req) {
   try {
@@ -70,9 +78,9 @@ export async function GET(req) {
       db,
       "profileData",
       profileId,
-      "chats",
+      "Chats",
       chatId,
-      "messages"
+      "Messages"
     );
 
     const q = query(messagesCol, orderBy("timestamp", "asc"));
