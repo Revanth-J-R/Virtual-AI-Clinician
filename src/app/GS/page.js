@@ -47,7 +47,7 @@ export default function ChatbotPage({ profileId }) {
   const synthRef = useRef(typeof window !== "undefined" ? window.speechSynthesis : null);
   const currentUtterRef = useRef(null);
   const fadeTimeoutRef = useRef(null);
-  const GIF_FADE_MS = 250;
+  const GIF_FADE_MS = -16000; // Duration for GIF fade-out
 
   // States
   const [userProfileId, setUserProfileId] = useState(profileId || null);
